@@ -1,0 +1,76 @@
+Bugs & Limitations:
+- specular lighting seems to be broken, put the light at (0,0,0) and it does not work as expected.
+- Phong shading can only handle 1 light at the moment.
+- adding objects does not work well - light breaks down and does not resolve nearest object.
+- removing diffuse shading from sphere will stop diffuse shading for disc too.
+- fix physics engine
+- read and implement the following: http://media.tojicode.com/sfjs-vectors/
+
+v0.30
+- Simplified code.
+- Basic rotation by mouse.
+
+v0.14 - v0.21 - ???
+- These versions have been lost.
+
+v0.13d - 13.06.2013
+- Aligned the "disc" and "sphere" object properties
+- 117ms
+
+v0.13c - 13.06.2013
+- Fixed the physics problem, bounces nicely now.
+- Changed order of rendering, now rendered properly with current scene. But still a hack. 
+- 125ms
+
+v0.13b - 13.06.2013
+- add basic physics engine (still needs work).
+- change vector class to use typed vectors (for speed).
+- 131ms
+
+v0.13a - 09.06.2013
+- swapped bmp_lib for native canvas
+- changed grid referencing from grid[r][c]={R,G,B} to grid[p]=color
+- 153ms
+
+v0.13 - 24.05.2009
+- implemented a cheap and nasty anti-aliasing effect
+- 613ms
+
+v0.12 - 22.05.2009
+- added phong shading including shadow effect.
+
+v0.11 - 22.05.2009
+- changed contructors, less iniatialisation at constructor, but now after object is created.
+- changed lighting method to ambiant, previously each object has it's own "opacity", now this is controlled by the scene object.
+
+v0.10 - 22.05.2009
+- added lighting model to scene
+- enabled specular relfections from lights
+- fixed disc problem
+- fixed reflection bug that reflected two images
+
+v0.09 - 20.05.2009
+- further code clean-up
+- added relflections
+
+v0.08 - 19.05.2009
+- full code tidy up completed - now object orientated.
+- added comments.
+- Bug: For some reason render time doubled, but no new features were added.
+- colour is now a vector.
+
+v0.07 - 18.05.2009
+- vectorised much of the code.
+- started on a scene object - not complete.
+
+v0.06 - 12.05.2009
+- updated to include generic rays, not just from source.
+- more generic raytracer setup
+- added reflection calculator.
+- changed Shade() to recursive function
+
+v0.05 - 11.05.2009
+- Added plane. Plane sort of working, not as expected though.
+
+v0.04
+- Fixed diagonal bug - there was a bug in my modified version of the bmp library.
