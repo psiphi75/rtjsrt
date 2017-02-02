@@ -24,46 +24,36 @@
 'use strict';
 
 /**
- * A **very** simple physics implimentation.
- * @param ground_v
- * @param options
- * @constructor
+ * General vector object. Stores vector information and has vector operators.
+ * @type {{make: make, dot: dot, scale: scale, add: add, sub: sub, modv: modv, max_val: max_val, normalise: normalise}}
  */
-function Physics(ground_v, options) {
-    this.obj_list = [];
-    this.gravity = vector.make(0.0, -0.00981, 0.0);
-    this.ground_vector = ground_v;
-    this.options = options;
-}
+module.exports = {
+    make: function (x, y, z) {
+        return [x, y, z];
+    },
 
-Physics.prototype.add_object = function (obj) {
-    this.obj_list[this.obj_list.length] = obj;
-    obj.velocity = vector.make(0, 0, 0);
-};
+    dot: function (v, w) {
+        return (v[0] * w[0] + v[1] * w[1] + v[2] * w[2]);
+    },
 
-Physics.prototype.apply_forces = function () {
-    for (var i = 0; i < this.obj_list.length; i++) {
-        var obj = this.obj_list[i];
-        obj.c = vector.add(obj.c, obj.velocity);
-        obj.velocity = vector.add(obj.velocity, this.gravity);
-
-        var y_lowest_point = obj.c[1] - obj.r;
-        if (y_lowest_point <= this.ground_vector[1]) {
-
-            if (this.options.bouncing) {
-                // bounce the sphere by reversing the velocity and adding some damping
-                obj.c[1] -= y_lowest_point - this.ground_vector[1];
-                obj.velocity[0] *= 0.9;
-                obj.velocity[1] *= -0.6;
-                obj.velocity[2] *= 0.9;
-            } else {
-                // no bouncing
-                obj.velocity[1] = 0;
-                obj.c[1] = obj.r;
-            }
-        }
-
+    scale: function (f, v) {
+        return [v[0] * f, v[1] * f, v[2] * f];
+    },
+    add: function (v, w) {
+        return [v[0] + w[0], v[1] + w[1], v[2] + w[2]];
+    },
+    sub: function (v, w) {
+        return [v[0] - w[0], v[1] - w[1], v[2] - w[2]];
+    },
+    modv: function (v) {
+        return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    },
+    max_val: function (max, v) {
+        return [Math.min(v[0], max), Math.min(v[1], max), Math.min(v[2], max)];
+    },
+    normalise: function (v) {
+        var s = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        return [v[0] / s, v[1] / s, v[2] / s];
     }
-};
 
-module.exports = Physics;
+};

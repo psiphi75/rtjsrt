@@ -1,76 +1,15 @@
 <!DOCTYPE HTML>
 <html lang='en'>
     <head>
-        <title>PsiPhi Javascript ray tracer</title>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <title>Real Time JavaScript Ray Tracer</title>
     </head>
 <body>
-
-    <canvas id='canvas' width='500' height='500'></canvas>
+    <canvas id='canvas'></canvas>
     <p id='fps'>FPS: -</p>
     <button id='run_button' onClick='runPause()'>Run/Pause</button>
     <br>
     <br>
-    <script src='Physics.js'></script>
-    <script src='Timer.js'></script>
-    <script src='Objects.js'></script>
-    <script src='RayTracer.js'></script>
-
-    <script>//<!--
-        var rt;
-        var cursorX;
-        var cursorY;
-        var animationIsRunning = true;
-        var timer = new FPSTimer();
-
-        document.onmousemove = function(e){
-            cursorX = e.pageX;
-            cursorY = e.pageY;
-        };
-
-        function generate() {
-
-            timer.start();
-            rt.raytrace();
-            var fps = timer.stop();
-            var fpsAvg = timer.average();
-
-            image.data = imageData;
-            context.putImageData(image, 0, 0);
-
-            document.getElementById('fps').innerHTML = '<p>FPS: ' + fps.toFixed(1) + ' (' + fpsAvg.toFixed(2) + ')</p>';
-            if (animationIsRunning) setTimeout(generate, 0);
-
-        }
-
-        function runPause() {
-            animationIsRunning = !animationIsRunning;
-            if (animationIsRunning) {
-                generate();
-            }
-        }
-
-        var canvas = document.getElementById('canvas');
-        var height = canvas.height;
-        var width = canvas.width;
-
-        var context = canvas.getContext('2d');
-        var image = context.getImageData(0, 0, width, height);
-        var imageData = image.data;
-
-        // Set the colour to white
-        for (p = 0; p < imageData.length; p += 4) {
-            imageData[p + 3] = 255;
-        }
-
-
-        // Let the page load.
-        window.onload = function () {
-            rt = new RayTracer(width, height, imageData, true);
-            generate();
-        };
-
-        //-->
-    </script>
-
+    <script src='www/bundle.js'></script>
 </body>
 </html>

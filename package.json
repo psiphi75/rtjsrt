@@ -1,0 +1,23 @@
+{
+  "name": "rtjsrt",
+  "version": "1.0.0",
+  "description": "Realtime Javascript Raytracer - just a small toy project",
+  "main": "run-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./build/build.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/psiphi75/rtjsrt.git"
+  },
+  "author": "Simon M. Werner",
+  "license": "APSL-2.0",
+  "bugs": {
+    "url": "https://github.com/psiphi75/rtjsrt/issues"
+  },
+  "homepage": "https://github.com/psiphi75/rtjsrt#readme",
+  "dependencies": {
+    "performance-now": "^2.0.0"
+  }
+}

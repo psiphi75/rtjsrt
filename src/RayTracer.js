@@ -21,31 +21,28 @@
  *                                                                   *
  *********************************************************************/
 
-/****************************************************************************/
-/**                                                                        **/
-/**                       Javascript    Ray    Tracer                      **/
-/**                                                                        **/
-/****************************************************************************/
+/*********************************************************************/
+/**                                                                 **/
+/**      Javascript    Ray    Tracer                                **/
+/**                                                                 **/
+/*********************************************************************/
 
-/****************************************************************************
+/*********************************************************************
 
- Coordinate system used:
+         Coordinate system used:
 
- +y
+         +y
 
- ^  ^  +z (depth)
- | /
- |/
- +----->  +x
+         ^  ^  +z (depth)
+         | /
+         |/
+         +----->  +x
 
- ****************************************************************************/
+ *********************************************************************/
 
 'use strict';
 
 // TODO: Before first publish: Turn into server-client model
-// TODO: Before first publish: Make the physics repeatable
-// TODO: Before first publish: Allow 3 objects
-// TODO: Before first publish: Change timing to FPS + have only following details: FPS, run/pause, reset,
 
 // TODO: Break up shade() - allows better analysis
 // TODO: Remove global objects
@@ -53,16 +50,17 @@
 // TODO: Create a change of object structure
 // TODO: Make array a typed array
 
+var Objects = require('./Objects');
+var Physics = require('./Physics');
+var constants = require('./Constants');
+var vector = require('./vector');
 
 //
 // Some global constants.
 //
 
-var COL_SQUARE_1 = vector.make(5, 5, 5);
-var COL_SQUARE_2 = vector.make(0, 125, 0);
-var COL_WHITE = vector.make(255, 255, 255);
-var COL_BACKGROUND = COL_WHITE;
-var GROUND_PLANE = vector.make(0, 0, 0);
+var COL_BACKGROUND = constants.COL_BACKGROUND;
+var GROUND_PLANE = constants.GROUND_PLANE;
 
 
 function RayTracer(cols, rows, grid, do_physics) {
@@ -84,13 +82,13 @@ function RayTracer(cols, rows, grid, do_physics) {
         self.fizix = new Physics(GROUND_PLANE, { bouncing: false });
 
         // Init the eye and scene
-        var eye = new Eye(vector.make(0.0, 1.5, -10.0), 0.75, 0.75, 2.0);
-        self.scene = new Scene(eye);
+        var eye = new Objects.Eye(vector.make(0.0, 1.5, -10.0), 0.75, 0.75, 2.0);
+        self.scene = new Objects.Scene(eye);
         self.scene.ambiant_light = 0.3;
 
         // Add a sphere
         var sph_center = vector.make(0.0, 1.5, 0.0);
-        var sph = new Sphere(sph_center);
+        var sph = new Objects.Sphere(sph_center);
         sph.r = 1.0;            // Radius
         sph.col = vector.make(200, 100, 255);   // Colour of sphere
         sph.rf = 0.8;           // Reflectivity -> 0.0 to 1.0
@@ -101,7 +99,7 @@ function RayTracer(cols, rows, grid, do_physics) {
 
         // ... and another sphere
         var sph2_center = vector.make(-1.5, 1, -0.75);
-        var sph2 = new Sphere(sph2_center);
+        var sph2 = new Objects.Sphere(sph2_center);
         sph2.r = 0.5;            // Radius
         sph2.col = vector.make(100, 255, 55);   // Colour of sphere
         sph2.rf = 0.1;           // Reflectivity -> 0.0 to 1.0
@@ -112,7 +110,7 @@ function RayTracer(cols, rows, grid, do_physics) {
 
         // ... and another sphere
         var sph3_center = vector.make(1.2, 0.7, -0.25);
-        var sph3 = new Sphere(sph3_center);
+        var sph3 = new Objects.Sphere(sph3_center);
         sph3.r = 0.3;            // Radius
         sph3.col = vector.make(255, 100, 55);   // Colour of sphere
         sph3.rf = 0.7;           // Reflectivity -> 0.0 to 1.0
@@ -124,7 +122,7 @@ function RayTracer(cols, rows, grid, do_physics) {
         // Add a disc
         var disc_center = vector.make(0.0, 0.0, 2.0);
         var disc_normal = vector.make(0.0, 1.0, 0.0);
-        var disc = new Disc(disc_center, disc_normal);
+        var disc = new Objects.Disc(disc_center, disc_normal);
         disc.r = 3;
         disc.rf = 0.0;           // Reflectivity -> 0.0 to 1.0
         disc.diff = 40.0;
@@ -133,11 +131,11 @@ function RayTracer(cols, rows, grid, do_physics) {
         // Add a light
         var light_p = vector.make(5, 7.5, 2.0);
         var light_col = vector.make(255, 255, 255);
-        var light = new Light(light_p, light_col);
+        var light = new Objects.Light(light_p, light_col);
         self.scene.add_light(light);
     }
 }
-RayTracer.prototype.raytrace = function() {
+RayTracer.prototype.raytrace = function(viewX, viewY) {
 
     var self = this;
     if (this.do_physics) {
@@ -148,7 +146,7 @@ RayTracer.prototype.raytrace = function() {
     var col = 0;
 
     // TODO: Create a rotation around the center of the disc
-    this.scene.eye.c = vector.make(cursorX / 200, cursorY / 400 + 1, -10.0);
+    this.scene.eye.c = vector.make(viewX, viewY, -10.0);
 
     // Start in the top left
     var scene_eye_w = this.scene.eye.w;
@@ -268,3 +266,5 @@ RayTracer.prototype.raytrace = function() {
     }
 
 };
+
+module.exports = RayTracer;
