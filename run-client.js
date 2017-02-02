@@ -36,11 +36,10 @@ function runPause() {
 window.onload = function () {
 
     var constants = require('./src/Constants');
+    var RayTracer = require('./src/RayTracer');
     var FPSTimer = require('./src/FPSTimer');
     var timer = new FPSTimer();
 
-    var RayTracer = require('./src/RayTracer');
-    var rt = new RayTracer(width, height, imageData, true);
 
     var cursorX;
     var cursorY;
@@ -57,6 +56,7 @@ window.onload = function () {
         imageData[p + 3] = 255;
     }
 
+    var rt = new RayTracer(constants.WIDTH, constants.HEIGHT, imageData, true);
     generate();
 
     document.onmousemove = function(e){

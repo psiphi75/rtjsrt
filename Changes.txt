@@ -6,6 +6,9 @@ Bugs & Limitations:
 - fix physics engine
 - read and implement the following: http://media.tojicode.com/sfjs-vectors/
 
+v0.31 - 02.02.2017
+- Refactored into client-side and server-side code.
+
 v0.30
 - Simplified code.
 - Basic rotation by mouse.
