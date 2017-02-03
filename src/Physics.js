@@ -44,28 +44,46 @@ Physics.prototype.add_object = function (obj) {
     obj.velocity = vector.make(0, 0, 0);
 };
 
+// Physics.prototype.apply_forces = function () {
+//     for (var i = 0; i < this.obj_list.length; i++) {
+//         var obj = this.obj_list[i];
+//         obj.c = vector.add(obj.c, obj.velocity);
+//         obj.velocity = vector.add(obj.velocity, this.gravity);
+//
+//         var y_lowest_point = obj.c[1] - obj.r;
+//         if (y_lowest_point <= this.ground_vector[1]) {
+//
+//             if (this.options.bouncing) {
+//                 // bounce the sphere by reversing the velocity and adding some damping
+//                 obj.c[1] -= y_lowest_point - this.ground_vector[1];
+//                 obj.velocity[0] *= 0.9;
+//                 obj.velocity[1] *= -0.6;
+//                 obj.velocity[2] *= 0.9;
+//             } else {
+//                 // no bouncing
+//                 obj.velocity[1] = 0;
+//                 obj.c[1] = obj.r;
+//             }
+//         }
+//
+//     }
+// };
+
 Physics.prototype.apply_forces = function () {
     for (var i = 0; i < this.obj_list.length; i++) {
-        var obj = this.obj_list[i];
-        obj.c = vector.add(obj.c, obj.velocity);
-        obj.velocity = vector.add(obj.velocity, this.gravity);
 
-        var y_lowest_point = obj.c[1] - obj.r;
-        if (y_lowest_point <= this.ground_vector[1]) {
+        rotate3d(this.obj_list[i].c, 5 / 180 * Math.PI);
 
-            if (this.options.bouncing) {
-                // bounce the sphere by reversing the velocity and adding some damping
-                obj.c[1] -= y_lowest_point - this.ground_vector[1];
-                obj.velocity[0] *= 0.9;
-                obj.velocity[1] *= -0.6;
-                obj.velocity[2] *= 0.9;
-            } else {
-                // no bouncing
-                obj.velocity[1] = 0;
-                obj.c[1] = obj.r;
-            }
-        }
+    }
 
+    function rotate3d(p, angle) {
+        var sin_t = Math.sin(angle);
+        var cos_t = Math.cos(angle);
+
+        var x = p[0];
+        var z = p[2];
+        p[0] = x * cos_t - z * sin_t;
+        p[2] = z * cos_t + x * sin_t;
     }
 };
 

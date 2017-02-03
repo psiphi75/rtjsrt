@@ -41,8 +41,8 @@ window.onload = function () {
     var timer = new FPSTimer();
 
 
-    var cursorX;
-    var cursorY;
+    var cursorX = 0;
+    var cursorY = 1;
 
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
@@ -67,7 +67,7 @@ window.onload = function () {
     function generate() {
 
         timer.start();
-        rt.raytrace(cursorX / 200, cursorY / 400 + 1);
+        rt.raytrace(cursorX / constants.WIDTH, cursorY / constants.HEIGHT + 1);
         var fps = timer.stop();
 
         context.putImageData(image, 0, 0);
