@@ -60,15 +60,16 @@ Sphere.prototype.intersect = function (v, p) {
     var D = B * B - 4.0 * A * C;
     if (D >= 0.0) {
         var sqrtD = Math.sqrt(D);
-        if (-B <= sqrtD) {
-            // If t is less than zero then the ray is in the wrong direction.
-            return [COL_WHITE, -1];
+        if (-B > sqrtD) {
+            return {
+                col: this.col,
+                t: (-B - sqrtD) / (2.0 * A)
+            };
         }
-        return [this.col, (-B - sqrtD) / (2.0 * A)];
     }
-    else {
-        return [COL_WHITE, -1];
-    }
+
+    // No hit, or ray is in wrong direction (when t < zero)
+    return undefined;
 };
 /**
  * Get the normal at point p.
@@ -112,14 +113,21 @@ Disc.prototype.intersect = function (v, p) {
         var pi_sub_c = vector.modv(vector.sub(pi, this.c));
         if (pi_sub_c < this.r) {
             if (Math.sin(pi[0] * 5.0) * Math.sin(pi[2] * 5.0) > 0.0) {
-                return [COL_SQUARE_1, t];
-            }
-            else {
-                return [COL_SQUARE_2, t];
+                return {
+                    col: COL_SQUARE_1,
+                    t: t
+                }
+            } else {
+                return {
+                    col: COL_SQUARE_2,
+                    t: t
+                }
             }
         }
     }
-    return [COL_WHITE, -1];
+
+    // No intersection
+    return undefined;
 };
 /**
  * Return a copy of the normal vector for this disc.

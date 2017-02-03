@@ -31,11 +31,9 @@ module.exports = {
     make: function (x, y, z) {
         return [x, y, z];
     },
-
     dot: function (v, w) {
         return (v[0] * w[0] + v[1] * w[1] + v[2] * w[2]);
     },
-
     scale: function (f, v) {
         return [v[0] * f, v[1] * f, v[2] * f];
     },
@@ -44,6 +42,9 @@ module.exports = {
     },
     sub: function (v, w) {
         return [v[0] - w[0], v[1] - w[1], v[2] - w[2]];
+    },
+    product: function (v, w) {
+        return [v[0] * w[0], v[1] * w[1], v[2] * w[2]];
     },
     modv: function (v) {
         return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -55,5 +56,4 @@ module.exports = {
         var s = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
         return [v[0] / s, v[1] / s, v[2] / s];
     }
-
 };

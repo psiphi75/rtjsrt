@@ -31,7 +31,7 @@ const constants = {
     COL_SQUARE_1: vector.make(5, 5, 5),
     COL_SQUARE_2: vector.make(0, 125, 0),
     COL_WHITE: vector.make(255, 255, 255),
-    COL_BACKGROUND: vector.make(255, 255, 255),
+    COL_BACKGROUND: vector.make(0, 0, 0),
     GROUND_PLANE: vector.make(0, 0, 0)
 };
 
