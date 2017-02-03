@@ -38,7 +38,7 @@ const timer = new FPSTimer();
 while(true) {
 
     timer.start();
-    rt.raytrace(0, 0);
+    rt.render();
     const fps = timer.stop();
 
     console.log(`FPS: ${fps.toFixed(1)} ${timer.average().toFixed(2)}`);

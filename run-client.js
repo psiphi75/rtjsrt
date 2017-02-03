@@ -67,7 +67,7 @@ window.onload = function () {
     function generate() {
 
         timer.start();
-        rt.raytrace(cursorX / constants.WIDTH, cursorY / constants.HEIGHT + 1);
+        rt.render();
         var fps = timer.stop();
 
         context.putImageData(image, 0, 0);

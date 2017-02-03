@@ -153,7 +153,7 @@ function RayTracer(cols, rows, grid, do_physics) {
 /**
  * Render the scene.  This will update the data object that was provided.
  */
-RayTracer.prototype.raytrace = function() {
+RayTracer.prototype.render = function() {
 
     var self = this;
     if (self.do_physics) {
