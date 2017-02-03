@@ -49,14 +49,16 @@ function Sphere(center_v) {
     this.d = vector.make(0, 0, 0);  // like .n above.
     this.type = 'sphere';
 }
-Sphere.prototype.intersect = function (v, p) {
+Sphere.prototype.intersect = function (ray) {
     // Intersection with a circle from a ray coming from [px, py, pz] direction [vx, vy, vz]
     //A=vx * vx + vy * vy + vz * vz
     //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
     //C=px*px + py*py + pz*pz - 2 * (px
-    var A = vector.dot(v, v);
-    var B = 2.0 * (vector.dot(v, p) - vector.dot(v, this.c));
-    var C = vector.dot(p, p) - 2.0 * vector.dot(p, this.c) + vector.dot(this.c, this.c) - this.r * this.r;
+
+    // FIXME (perf): Reduce number of objects property lookups by making constants
+    var A = vector.dot(ray.direction, ray.direction);
+    var B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
+    var C = vector.dot(ray.origin, ray.origin) - 2.0 * vector.dot(ray.origin, this.c) + vector.dot(this.c, this.c) - this.r * this.r;
     var D = B * B - 4.0 * A * C;
     if (D >= 0.0) {
         var sqrtD = Math.sqrt(D);
@@ -94,34 +96,33 @@ function Disc(center_v, norm_v) {
     this.col = COL_WHITE;
     this.rf = 0.0;          // Reflectivity -> 0.0 to 1.0.
     this.spec = 0.0;        // specular intensity
-    this.diff = 0.0;        // diffuse intesity
+    this.diff = 0.0;        // diffuse intensity
     this.d = vector.dot(this.c, this.n);    // solve plane equation for d
     this.type = 'disc';
 }
 /**
  * Intersection with a disc from a ray coming from [px, py, pz] with direction vector [vx, vy, vz].
- * @param {vector} v    the incoming ray source position
- * @param {vector} p    the incoming ray direction vector
- * @returns {[*,*]}     And array with [colour, intersection hit]
+ * @param {Ray} ray    the incoming ray
+ * @returns {object}      And array with {col, t}
  */
-Disc.prototype.intersect = function (v, p) {
+Disc.prototype.intersect = function (ray) {
 
-    var d = vector.dot(this.n, v);
-    var t = (this.d - vector.dot(this.n, p)) / d;
+    var d = vector.dot(this.n, ray.direction);
+    var t = (this.d - vector.dot(this.n, ray.origin)) / d;
     if (t > 0.0) {
-        var pi = vector.add(p, vector.scale(t, v));
+        var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
         var pi_sub_c = vector.modv(vector.sub(pi, this.c));
         if (pi_sub_c < this.r) {
             if (Math.sin(pi[0] * 5.0) * Math.sin(pi[2] * 5.0) > 0.0) {
                 return {
                     col: COL_SQUARE_1,
                     t: t
-                }
+                };
             } else {
                 return {
                     col: COL_SQUARE_2,
                     t: t
-                }
+                };
             }
         }
     }
@@ -167,7 +168,6 @@ function Eye(center, width, height, depth) {
  */
 function Scene(eye) {
     this.eye = eye;
-    this.ambiant_light = 1.0;       // Default ambient light intensity -> 0.0 to 1.0
     this.lights = [];               // The list of lights for the scene
     this.objs = [];                 // The list of objects in the scene
 }

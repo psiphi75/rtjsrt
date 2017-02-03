@@ -27,7 +27,7 @@
  * General vector object. Stores vector information and has vector operators.
  * @type {{make: make, dot: dot, scale: scale, add: add, sub: sub, modv: modv, max_val: max_val, normalise: normalise}}
  */
-module.exports = {
+var vector = {
     make: function (x, y, z) {
         return [x, y, z];
     },
@@ -53,7 +53,11 @@ module.exports = {
         return [Math.min(v[0], max), Math.min(v[1], max), Math.min(v[2], max)];
     },
     normalise: function (v) {
-        var s = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        var s = vector.modv(v);
         return [v[0] / s, v[1] / s, v[2] / s];
     }
 };
+
+
+module.exports = vector;
+

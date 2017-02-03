@@ -60,6 +60,22 @@ var COL_BACKGROUND = constants.COL_BACKGROUND;
 var GROUND_PLANE = constants.GROUND_PLANE;
 
 
+/**
+ * A ray that gets cast.
+ * @param {vector} origin
+ * @param {vector} direction (must be normalised)
+ * @constructor
+ */
+function Ray(origin, direction) {
+    this.origin = origin;
+    this.direction = direction;
+
+    // FIXME: Just for debugging
+    var n = vector.modv(direction);
+    if (!(0.999999999 < n && n < 1.000000001)) throw new Error('Ray: direction not normalised: ' + vector.modv(direction));
+}
+
+
 function RayTracer(cols, rows, grid, do_physics) {
     this.cols = cols;
     this.rows = rows;
@@ -136,10 +152,8 @@ function RayTracer(cols, rows, grid, do_physics) {
 }
 /**
  * Render the scene.  This will update the data object that was provided.
- * @param angleX   The angle of x axis (radians)
- * @param angleY   The angle of y axis (radians)
  */
-RayTracer.prototype.raytrace = function(angleX, angleY) {
+RayTracer.prototype.raytrace = function() {
 
     var self = this;
     if (self.do_physics) {
@@ -155,7 +169,6 @@ RayTracer.prototype.raytrace = function(angleX, angleY) {
     var dnx = scene_eye_w / (self.cols - 1.0);
     var dny = self.scene.eye.h / (self.rows - 1.0);
 
-    // var col = 0;
     for (var p = 0; p < self.grid.length; p += 4) {
         row += 1;
         n[0] += dnx;
@@ -167,7 +180,8 @@ RayTracer.prototype.raytrace = function(angleX, angleY) {
             n[0] = -scene_eye_w / 2.0;
         }
 
-        var pixel_col = shade(self.depth, self.scene.eye.c, n, -1, self);
+        var firstRay = new Ray(self.scene.eye.c, vector.normalise(n));
+        var pixel_col = shade(self.depth, firstRay, -1);
 
         // limit the colour - extreme intensities become white
         vector.max_val(255, pixel_col);
@@ -180,145 +194,129 @@ RayTracer.prototype.raytrace = function(angleX, angleY) {
 
     }
 
+    /**
+     * Recursive function that returns the shade of a pixel.
+     * @param {number} depth     How many iterations left
+     * @param {Ray} ray          The ray
+     * @param {number} source_i  The ID of the object the ray comes from
+     * @returns {vector}         An RGB colour
+     */
+    function shade(depth, ray, source_i) {
+
+        if (depth === 0) {
+            return COL_BACKGROUND;
+        }
+
+        depth--;
+
+        var closestObj;
+        var closestObjT = Infinity;
+        for (var i = 0; i < self.scene.objs.length; i++) {
+            // Don't intersect object with itself
+            if (i !== source_i) {
+                var obj = self.scene.objs[i];
+                var intersection = obj.intersect(ray);
+
+                if (intersection) {
+                    if (intersection.t < closestObjT) {
+                        closestObjT = intersection.t;
+                        closestObj = {
+                            i: i,
+                            intersection: intersection,
+                            obj: obj
+                        };
+                    }
+                }
+            }
+        }
+
+        // If we found an object, get the shade for the object.  Otherwise return the background
+        if (closestObj) {
+            return getShadeAtPoint(depth, ray, closestObj.i, closestObj.intersection, closestObj.obj);
+        } else {
+            return COL_BACKGROUND;
+        }
+
+    }
+
+    function getShadeAtPoint(depth, ray, source_i, intersection, obj) {
+        // object found, return the colour
+
+        var colour = intersection.col;
+        var t = intersection.t;
+        // if (self.scene.ambiant_light > 0.0) {
+        //     colour = vector.scale(self.scene.ambiant_light, colour);
+        // }
+
+        if (obj.rf > 0 || obj.spec > 0 || obj.diff > 0) {
+
+            var pi = vector.add(ray.origin, vector.scale(t, ray.direction));     // the position of the intersection
+            var norm = obj.get_norm(pi);                        // the object normal at the intersection point
+
+            if (obj.rf > 0) {
+                // We have a reflection Jim.
+                var vi = vector.sub(ray.direction, vector.scale(2 * vector.dot(ray.direction, norm), norm));
+                var reflectedRay = new Ray(pi, vector.normalise(vi));
+                colour = vector.add(colour, vector.scale(obj.rf, shade(depth, reflectedRay, source_i)));
+            }
+
+            if (obj.spec > 0 || obj.diff > 0) {
+
+                // vector to the light source
+                var l = vector.sub(self.scene.lights[0].p, pi);
+                var intersection2;
+
+                // create shadow, look for all objects for an intersection
+                for (var d = 0; d < self.scene.objs.length; d++) {
+
+                    // Don't intersect object with itself
+                    if (source_i !== d) {
+                        var obj2 = self.scene.objs[d];
+                        var lightRay = new Ray(pi, vector.normalise(l));
+                        intersection2 = obj2.intersect(lightRay);
+
+                        if (intersection2) {
+                            break;
+                        }
+                    }
+                }
+
+
+                // if no object found, then we can do the test for the light.
+                if (intersection2 === undefined) {
+
+                    l = vector.normalise(l);
+
+                    // Phong shading (for specular shading)
+                    if (obj.spec > 0) {
+
+                        var r = vector.sub(l, vector.scale(2.0 * vector.dot(l, norm), norm));
+                        var v_dot_r = vector.dot(ray.direction, vector.normalise(r));
+                        if (v_dot_r > 0) {
+                            var spec = obj.spec * Math.pow(v_dot_r, 20);
+                            colour = vector.add(colour, vector.scale(spec, self.scene.lights[0].col));
+                        }
+                    }
+
+                    // Phong shading (for diffuse shading)
+                    if (obj.diff > 0) {
+                        var l_dot_n = vector.dot(l, vector.normalise(norm));  // FIXME (Algo): The norm should already be normalised
+                        if (l_dot_n > 0) {
+                            var dist = vector.modv(l); // distance from light source
+                            var diff = l_dot_n * obj.diff / (dist * dist);
+                            var c = vector.product(self.scene.lights[0].col, intersection.col);
+                            colour = vector.add(colour, vector.scale(diff, c));
+                        }
+                    }
+                }
+            }
+
+        }
+
+        return colour;
+
+    }
+
 };
-
-/**
- * Recursive function that returns the shade of a pixel.
- * @param {number} depth     How many iterations left
- * @param {vector} src_p         The source position
- * @param {vector} v         The heading vector
- * @param {number} source_i  The ID of the object the ray comes from
- * @returns {vector}         An RGB colour
- */
-function shade(depth, src_p, v, source_i, self) {
-
-    if (depth === 0) {
-        return COL_BACKGROUND;
-    }
-
-    depth--;
-
-    var closestObj;
-    var closestObjT = Infinity;
-    for (var i = 0; i < self.scene.objs.length; i++) {
-        // Don't intersect object with itself
-        if (i !== source_i) {
-            var obj = self.scene.objs[i];
-            var intersection = obj.intersect(v, src_p);
-
-            if (intersection) {
-                if (intersection.t < closestObjT) {
-                    closestObjT = intersection.t;
-                    closestObj = {
-                        i: i,
-                        intersection: intersection,
-                        obj: obj
-                    };
-                }
-            }
-        }
-    }
-
-    // If we found an object, get the shade for the object.  Otherwise return the background
-    if (closestObj) {
-        return getShadeAtPoint(depth, src_p, v, closestObj.i, self, closestObj.intersection, closestObj.obj);
-    } else {
-        return COL_BACKGROUND;
-    }
-
-}
-
-function getShadeAtPoint(depth, src_p, v, source_i, self, intersection, obj) {
-    // object found, return the colour
-
-    var colour = intersection.col;
-    var t = intersection.t;
-    // if (self.scene.ambiant_light > 0.0) {
-    //     colour = vector.scale(self.scene.ambiant_light, colour);
-    // }
-
-    if (obj.rf > 0 || obj.spec > 0 || obj.diff > 0) {
-
-
-        var pi = vector.add(src_p, vector.scale(t, v));     // the position of the intersection
-        var norm = obj.get_norm(pi);                        // the object normal at the intersection point
-
-        if (obj.rf > 0) {
-            // We have a reflection Jim.
-            var vi = vector.sub(v, vector.scale(2 * vector.dot(v, norm), norm));
-            colour = vector.add(colour, vector.scale(obj.rf, shade(depth, pi, vi, source_i, self)));
-        }
-
-        if (obj.spec > 0 || obj.diff > 0) {
-
-            // vector to the light source
-            var l = vector.sub(self.scene.lights[0].p, pi);
-            var intersection2;
-
-            // create shadow, look for all objects for an intersection
-            for (var d = 0; d < self.scene.objs.length; d++) {
-
-                // Don't intersect object with itself
-                if (source_i !== d) {
-                    var obj2 = self.scene.objs[d];
-                    intersection2 = obj2.intersect(l, pi);
-
-                    if (intersection2) {
-                        break;
-                    }
-                }
-            }
-
-
-            // if no object found, then we can do the test for the light.
-            if (intersection2 === undefined) {
-
-                l = vector.normalise(l);
-
-                // Phong shading (for specular shading)
-                if (obj.spec > 0) {
-                    // var r = vector.sub(self.scene.lights[0].p, vector.scale(2.0 * vector.dot(self.scene.lights[0].p, norm), norm));
-                    // var v_dot_r = vector.dot(vector.normalise(v), vector.normalise(r));
-                    // if (v_dot_r > 0) {
-                    //     var spec = obj.spec * Math.pow(v_dot_r, 50);
-                    //     colour = vector.add(colour, vector.scale(spec, self.scene.lights[0].col));
-                    // }
-
-                    // vector3 R = L - 2.0f * DOT( L, N ) * N;
-                    // float dot = DOT( V, R );
-                    // if (dot > 0)
-                    // {
-                    //     float spec = powf( dot, 20 ) * prim->GetMaterial()->GetSpecular() * shade;
-                    //     // add specular component to ray color
-                    //     a_Acc += spec * light->GetMaterial()->GetColor();
-                    // }
-
-                    var r = vector.sub(l, vector.scale(2.0 * vector.dot(l, norm), norm));
-                    var v_dot_r = vector.dot(vector.normalise(v), vector.normalise(r));
-                    if (v_dot_r > 0) {
-                        var spec = obj.spec * Math.pow(v_dot_r, 20);
-                        colour = vector.add(colour, vector.scale(spec, self.scene.lights[0].col));
-                    }
-                }
-
-                // Phong shading (for diffuse shading)
-                if (obj.diff > 0) {
-                    var l_dot_n = vector.dot(l, vector.normalise(norm));  // FIXME (Algo): The norm should already be normalised
-                    if (l_dot_n > 0) {
-                        var dist = vector.modv(l); // distance from light source
-                        var diff = l_dot_n * obj.diff / (dist * dist);
-                        var c = vector.product(self.scene.lights[0].col, intersection.col);
-                        colour = vector.add(colour, vector.scale(diff, obj.col));
-                    }
-                }
-            }
-        }
-
-    }
-
-    return colour;
-
-}
-
 
 module.exports = RayTracer;
