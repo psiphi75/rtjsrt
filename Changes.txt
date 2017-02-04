@@ -6,6 +6,10 @@ Bugs & Limitations:
 - fix physics engine
 - read and implement the following: http://media.tojicode.com/sfjs-vectors/
 
+v0.31 - 04.02.2017
+- Fixed lighting issue - largely copied code from http://www.flipcode.com/archives/Raytracing_Topics_Techniques-Part_2_Phong_Mirrors_and_Shadows.shtml
+- Added Refractivity
+
 v0.31 - 02.02.2017
 - Refactored into client-side and server-side code.
 
@@ -22,7 +26,7 @@ v0.13d - 13.06.2013
 
 v0.13c - 13.06.2013
 - Fixed the physics problem, bounces nicely now.
-- Changed order of rendering, now rendered properly with current scene. But still a hack. 
+- Changed order of rendering, now rendered properly with current scene. But still a hack.
 - 125ms
 
 v0.13b - 13.06.2013

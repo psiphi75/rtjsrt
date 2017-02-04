@@ -76,9 +76,7 @@ var vLENGTH = vector.length;
  */
 function Ray(origin, direction) {
     this.origin = origin;
-
-    // FIXME: Can we remove this?
-    this.direction = vector.normalise(direction);
+    this.direction = direction;
 }
 
 
