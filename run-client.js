@@ -25,15 +25,16 @@
 
 var animationIsRunning = true;
 
-function runPause() {
-    animationIsRunning = !animationIsRunning;
-    if (animationIsRunning) {
-        generate();
-    }
-}
-
 // Let the page load.
-window.onload = function () {
+window.onload = function() {
+
+    // Attach runPause
+    document.getElementById('run_button').addEventListener('click', function runPause() {
+        animationIsRunning = !animationIsRunning;
+        if (animationIsRunning) {
+            generate();
+        }
+    }, false);
 
     var constants = require('./src/Constants');
     var RayTracer = require('./src/RayTracer');
@@ -54,19 +55,6 @@ window.onload = function () {
 
     var rt = new RayTracer(constants.WIDTH, constants.HEIGHT, imageData, true);
     generate();
-
-    document.onmousemove = function(e){
-        // cursorX = e.pageX;
-        // cursorY = e.pageY;
-
-        // function getCursorPosition(canvas, event) {
-            // var rect = canvas.getBoundingClientRect();
-            // var x = e.clientX - rect.left;
-            // var y = e.clientY - rect.top;
-            // console.log("x: " + x + " y: " + y);
-        // }
-
-    };
 
     function generate() {
 
