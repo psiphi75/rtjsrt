@@ -160,39 +160,43 @@ RayTracer.prototype.render = function() {
         self.physics.apply_forces();
     }
 
-    var row = -1;
-
     // Start in the top left
-    var scene_eye_w = self.scene.eye.w;
-    var n = vector.make(-scene_eye_w / 2.0, self.scene.eye.h / 2.0, self.scene.eye.d);
-
-    var dnx = scene_eye_w / (self.cols - 1.0);
+    var xDirectionStart = -self.scene.eye.w / 2.0;
+    var yDirectionStart = self.scene.eye.h / 2.0;
+    var direction = vector.make(xDirectionStart, yDirectionStart, self.scene.eye.d);
+    var origin = self.scene.eye.c;
+    var dnx = self.scene.eye.w / (self.cols - 1.0);
     var dny = self.scene.eye.h / (self.rows - 1.0);
+    var gridPnt = 0;
 
-    for (var p = 0; p < self.grid.length; p += 4) {
-        row += 1;
-        n[0] += dnx;
+    for (var row = 0; row < self.rows; row++) {
 
-        if (row === self.rows) {
-            // col++;
-            row = 0;
-            n[1] -= dny;
-            n[0] = -scene_eye_w / 2.0;
+        for (var col = 0; col < self.cols; col++) {
+
+            direction[0] += dnx;
+
+            var firstRay = new Ray(origin, vector.normalise(direction));
+            var pixel_col = vector.make(COL_BACKGROUND);
+
+            shade(self.depth, firstRay, -1);
+
+            // limit the colour - extreme intensities become white
+            pixel_col = vector.scale(0.1, pixel_col);
+            vector.max_val(255, pixel_col);
+
+            /* Set the pixel_col value of the pixel */
+            self.grid[gridPnt] = Math.round(pixel_col[0]);
+            self.grid[gridPnt + 1] = Math.round(pixel_col[1]);
+            self.grid[gridPnt + 2] = Math.round(pixel_col[2]);
+            gridPnt += 4;
+
         }
 
-        var firstRay = new Ray(self.scene.eye.c, vector.normalise(n));
-        var pixel_col = shade(self.depth, firstRay, -1);
-
-        // limit the colour - extreme intensities become white
-        vector.max_val(255, pixel_col);
-
-        /* Set the pixel_col value of the pixel */
-        self.grid[p] = Math.round(pixel_col[0]);
-        self.grid[p + 1] = Math.round(pixel_col[1]);
-        self.grid[p + 2] = Math.round(pixel_col[2]);
-        //self.grid[p+3] = 255     <-- only need to do this once at startup.
+        direction[0] = xDirectionStart;
+        direction[1] -= dny;
 
     }
+
 
     /**
      * Recursive function that returns the shade of a pixel.
@@ -201,7 +205,7 @@ RayTracer.prototype.render = function() {
      * @param {number} source_i  The ID of the object the ray comes from
      * @returns {vector}         An RGB colour
      */
-    function shade(depth, ray, source_i) {
+    function shade(depth, ray, source_i, colour) {
 
         if (depth === 0) {
             return COL_BACKGROUND;

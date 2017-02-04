@@ -29,7 +29,11 @@
  */
 var vector = {
     make: function (x, y, z) {
-        return [x, y, z];
+        if (x instanceof Array) {
+            return [x[0], x[1], x[2]];
+        } else {
+            return [x, y, z];
+        }
     },
     dot: function (v, w) {
         return (v[0] * w[0] + v[1] * w[1] + v[2] * w[2]);
@@ -60,4 +64,3 @@ var vector = {
 
 
 module.exports = vector;
-
