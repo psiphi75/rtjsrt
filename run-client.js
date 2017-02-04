@@ -40,10 +40,6 @@ window.onload = function () {
     var FPSTimer = require('./src/FPSTimer');
     var timer = new FPSTimer();
 
-
-    var cursorX = 0;
-    var cursorY = 1;
-
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
     context.canvas.height = constants.HEIGHT;
@@ -60,8 +56,16 @@ window.onload = function () {
     generate();
 
     document.onmousemove = function(e){
-        cursorX = e.pageX;
-        cursorY = e.pageY;
+        // cursorX = e.pageX;
+        // cursorY = e.pageY;
+
+        // function getCursorPosition(canvas, event) {
+            // var rect = canvas.getBoundingClientRect();
+            // var x = e.clientX - rect.left;
+            // var y = e.clientY - rect.top;
+            // console.log("x: " + x + " y: " + y);
+        // }
+
     };
 
     function generate() {

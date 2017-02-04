@@ -60,14 +60,16 @@ Sphere.prototype.intersect = function (ray) {
     var B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
     var C = vector.dot(ray.origin, ray.origin) - 2.0 * vector.dot(ray.origin, this.c) + vector.dot(this.c, this.c) - this.r * this.r;
     var D = B * B - 4.0 * A * C;
-    if (D >= 0.0) {
+    if (D > 0.0) {
         var sqrtD = Math.sqrt(D);
         if (-B > sqrtD) {
+        // if (i2 > 0 || i1 < 0) {
             return {
                 col: this.col,
                 t: (-B - sqrtD) / (2.0 * A)
             };
         }
+        // }
     }
 
     // No hit, or ray is in wrong direction (when t < zero)
@@ -81,7 +83,10 @@ Sphere.prototype.intersect = function (ray) {
 Sphere.prototype.get_norm = function (p) {
     return vector.sub(p, this.c);
 };
-
+Sphere.prototype.set_diffuse = function (diff) {
+    this.diff = diff;
+    this.spec = 1.0 - diff;
+};
 
 /**
  * Make a disc. This is just a circle on a plane.
@@ -91,7 +96,7 @@ Sphere.prototype.get_norm = function (p) {
 function Disc(center_v, norm_v) {
     // Plane equation is a*x + b*y + c*z = d.
     this.c = center_v;      // center of disc
-    this.n = norm_v;        // normal vector
+    this.n = vector.normalise(norm_v);        // normal vector
     this.r = 1.0;           // radius
     this.col = COL_WHITE;
     this.rf = 0.0;          // Reflectivity -> 0.0 to 1.0.
@@ -111,7 +116,7 @@ Disc.prototype.intersect = function (ray) {
     var t = (this.d - vector.dot(this.n, ray.origin)) / d;
     if (t > 0.0) {
         var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
-        var pi_sub_c = vector.modv(vector.sub(pi, this.c));
+        var pi_sub_c = vector.length(vector.sub(pi, this.c));
         if (pi_sub_c < this.r) {
             if (Math.sin(pi[0] * 5.0) * Math.sin(pi[2] * 5.0) > 0.0) {
                 return {
@@ -137,12 +142,17 @@ Disc.prototype.intersect = function (ray) {
 Disc.prototype.get_norm = function () {
     return vector.make(this.n[0], this.n[1], this.n[2]);
 };
+Disc.prototype.set_diffuse = function (diff) {
+    this.diff = diff;
+    this.spec = 1.0 - diff;
+};
+
 
 /**
  * Light class, can have position and colour.
  */
-function Light(p, colour) {
-    this.p = p;
+function Light(c, colour) {
+    this.c = c;
     this.col = colour;
 }
 
