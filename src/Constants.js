@@ -26,17 +26,27 @@
 const vector = require('./vector');
 
 const constants = {
+
+    // Used to make sure we are on the near side of point of intersection
     EPSILON: 0.00001,
+
+    // Canvas size
     WIDTH: 700,
     HEIGHT: 700,
-    COL_SQUARE_1: vector.make(5 / 255, 5 / 255, 5 / 255),
-    COL_SQUARE_2: vector.make(0, 0.5, 0),
+
+    // Named Colours
     COL_WHITE: vector.make(1, 1, 1),
     COL_RED: vector.make(1, 0, 0),
     COL_GREEN: vector.make(0, 1, 0),
     COL_BLUE: vector.make(0.6, 1, 1),
     COL_SILVER: vector.make(0.85, 0.85, 0.85),
+
+    // Colours of objects/scene
+    COL_SQUARE_1: vector.make(0, 0, 0),
+    COL_SQUARE_2: vector.make(0, 0.5, 0),
     COL_BACKGROUND: vector.make(0, 0, 0),
+
+    // Where the ground plane sits
     GROUND_PLANE: vector.make(0, 0, 0)
 };
 

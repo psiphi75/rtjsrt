@@ -45,7 +45,7 @@ function FPSTimer() {
         start: function() {
             startTime = now();
         },
-        stop:  function() {
+        stop: function() {
             if (startTime === undefined) return NaN;
             var stopTime = now();
             var fpsTime = 1000 / (stopTime - startTime);
@@ -60,7 +60,7 @@ function FPSTimer() {
             var sum = fpsTimes.reduce(function(a, b) { return a + b; });
             return sum / fpsTimes.length;
         }
-    }
+    };
 }
 
 module.exports = FPSTimer;

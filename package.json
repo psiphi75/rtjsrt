@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/psiphi75/rtjsrt#readme",
   "dependencies": {
-    "performance-now": "^2.0.0"
+    "performance-now": "^2.0.0",
+    "v8-profiler": "^5.6.5"
   }
 }

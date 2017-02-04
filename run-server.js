@@ -23,6 +23,10 @@
 
 'use strict';
 
+var profiler = require('v8-profiler');
+var fs = require('fs');
+const profiling = process.env.PROFILE === '1';
+
 const FPSTimer = require('./src/FPSTimer');
 const RayTracer = require('./src/RayTracer');
 const constants = require('./src/Constants');
@@ -41,19 +45,25 @@ console.log(new Date());
 console.log('FPS,FPS(avg)');
 
 let startTime = new Date().getTime();
-while (true) {
+while (new Date().getTime() - startTime < 60000) {
 
     timer.start();
     rt.render();
     const fps = timer.stop();
     frames++;
 
+    if (profiling && frames > 10) {
+        profiler.startProfiling();
+    }
+
     console.log(`${fps.toFixed(2)},${timer.average().toFixed(2)}`);
 
-    if (new Date().getTime() - startTime > 60000) {
-        console.log(`frames,${frames}`);
-        let exit = process.exit;
-        exit();
-    } 
+}
 
+console.log(`frames,${frames}`);
+
+if (profiling) {
+    profiler.stopProfiling().export(function(error, result) {
+        fs.writeFileSync('profile.json', result);
+    });
 }

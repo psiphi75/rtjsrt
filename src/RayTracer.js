@@ -252,11 +252,8 @@ RayTracer.prototype.render = function() {
     function getShadeAtPoint(depth, ray, source_i, intersection, obj, colour, rindex) {
         // object found, return the colour
 
-        // if (obj.rfl > 0 || obj.spec > 0 || obj.diff > 0) {
-
         colour = vSCALE(obj.ambient_light, intersection.col);
         var pi = vADD(ray.origin, vSCALE(intersection.t, ray.direction)); // the position of the intersection
-        // var norm = obj.get_norm(pi);                        // the object normal at the intersection point
 
         var light = self.scene.lights[0];
 

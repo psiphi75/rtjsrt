@@ -63,13 +63,11 @@ Sphere.prototype.intersect = function (ray) {
     if (D > 0.0) {
         var sqrtD = Math.sqrt(D);
         if (-B > sqrtD) {
-        // if (i2 > 0 || i1 < 0) {
             return {
                 col: this.col,
                 t: (-B - sqrtD) / (2.0 * A)
             };
         }
-        // }
     }
 
     // No hit, or ray is in wrong direction (when t < zero)

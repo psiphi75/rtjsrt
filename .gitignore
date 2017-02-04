@@ -2,4 +2,9 @@ Docs
 .idea/
 node_modules
 www
-*csv
+*.csv
+code.asm
+hydrogen*.cfg
+profile.json
+*.cpuprofile
+benchmarks
