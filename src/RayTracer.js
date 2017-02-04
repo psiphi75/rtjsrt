@@ -185,10 +185,6 @@ RayTracer.prototype.render = function() {
 
             direction[0] += dnx;
 
-            if (col === 139 && row === 340) {
-                console.log();
-            }
-
             var firstRay = new Ray(origin, vNORM(direction));
             var pixel_col = raytrace(self.depth, firstRay, -1, COL_BACKGROUND, 1);
 

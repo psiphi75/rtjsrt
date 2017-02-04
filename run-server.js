@@ -33,14 +33,27 @@ for (let p = 0; p < imageData.length; p++) {
 }
 
 const rt = new RayTracer(constants.WIDTH, constants.HEIGHT, imageData, true);
-
 const timer = new FPSTimer();
-while(true) {
+let frames = 0;
+
+
+console.log(new Date());
+console.log('FPS,FPS(avg)');
+
+let startTime = new Date().getTime();
+while (true) {
 
     timer.start();
     rt.render();
     const fps = timer.stop();
+    frames++;
 
-    console.log(`FPS: ${fps.toFixed(1)} ${timer.average().toFixed(2)}`);
+    console.log(`${fps.toFixed(2)},${timer.average().toFixed(2)}`);
+
+    if (new Date().getTime() - startTime > 60000) {
+        console.log(`frames,${frames}`);
+        let exit = process.exit;
+        exit();
+    } 
 
 }
