@@ -30,12 +30,12 @@ const constants = {
     // Used to make sure we are on the near side of point of intersection
     EPSILON: 0.00001,
 
-    // Canvas size
-    WIDTH: 700,
-    HEIGHT: 700,
+    // Canvas size - NOTE: Must be a factor of SQUARE_SIZE
+    WIDTH: 696,
+    HEIGHT: 696,
 
     // How big a grid size to use for checking contents (in pixels)
-    CONTENT_SIZE: 8,
+    SQUARE_SIZE: 8,
 
     // Named Colours
     COL_WHITE: vector.make(1, 1, 1),
@@ -52,5 +52,9 @@ const constants = {
     // Where the ground plane sits
     GROUND_PLANE: vector.make(0, 0, 0)
 };
+
+if (constants.WIDTH % constants.SQUARE_SIZE) console.error('WIDTH must be a factor of SQUARE_SIZE');
+if (constants.HEIGHT % constants.SQUARE_SIZE) console.error('HEIGHT must be a factor of SQUARE_SIZE');
+
 
 module.exports = constants;

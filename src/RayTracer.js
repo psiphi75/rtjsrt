@@ -72,9 +72,7 @@ var vNORM_IP = vector.normaliseInplace;
 var vSCALE = vector.scale;
 var vSCALE_IP = vector.scaleInplace;
 var vLENGTH = vector.length;
-var vMAXVAL_IP = vector.max_valInplace;
 var vSET = vector.set;
-var vGET = vector.get;
 
 /**
  * A ray that gets cast.
@@ -177,15 +175,33 @@ function RayTracer(cols, rows, grid, do_physics) {
         var dnx = vMAKE(self.scene.eye.w / (self.cols - 1.0), 0, 0);
         var dny = vMAKE(0, self.scene.eye.h / (self.rows - 1.0), 0);
 
-        self.firstRayCalcs = [];
+        self.preCalcs = [];
+        var strip;
+        var pnt = 0;
         for (var row = 0; row < self.rows; row++) {
+
+            if (row % constants.SQUARE_SIZE === 0) {
+                strip = [];
+            }
+
             for (var col = 0; col < self.cols; col++) {
                 vADD_IP(direction, dnx);
                 var firstRay = new Ray(origin, vNORM(direction));
-                self.firstRayCalcs.push(firstRay);
+                strip.push({
+                    firstRay: firstRay,
+                    pnt: pnt,
+                    pixel_col: vMAKE(0, 0, 0)
+                });
+                pnt++;
             }
+
             vSET(direction, 0, xDirectionStart);
             vSUB_IP(direction, dny);
+
+            if ((row + 1) % constants.SQUARE_SIZE === 0) {
+                self.preCalcs.push(strip);
+            }
+
         }
 
     }
@@ -193,7 +209,6 @@ function RayTracer(cols, rows, grid, do_physics) {
 /**
  * Render the scene.  This will update the data object that was provided.
  */
-// var TRACE = false;
 RayTracer.prototype.render = function() {
 
     var self = this;
@@ -201,29 +216,129 @@ RayTracer.prototype.render = function() {
         self.physics.apply_forces();
     }
 
+
+    // // The main loop
+    // self.preCalcs.forEach(function(strip) {
+    //     strip.forEach(function(preCalcedPoint) {
+    //         var pixel_col = raytrace(self.depth, preCalcedPoint.firstRay, -1, COL_BACKGROUND, 1);
+    //
+    //         /* Set the pixel_col value of the pixel */
+    //         var canvasPnt = preCalcedPoint.pnt * 4;
+    //         self.grid[canvasPnt] = pixel_col[0] * 255;
+    //         self.grid[canvasPnt + 1] = pixel_col[1] * 255;
+    //         self.grid[canvasPnt + 2] = pixel_col[2] * 255;
+    //
+    //     });
+    // });
+
     // The main loop
-    for (var pnt = 0; pnt < self.firstRayCalcs.length; pnt++) {
+    self.preCalcs.forEach(function(strip) {
+        raytraceStrip(strip);
+        strip.forEach(function(point) {
 
-        var pixel_col = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
+            var pixel_col = point.pixel_col;
 
-        /* Set the pixel_col value of the pixel */
-        var canvasPnt = pnt * 4;
-        self.grid[canvasPnt] = pixel_col[0] * 255;
-        self.grid[canvasPnt + 1] = pixel_col[1] * 255;
-        self.grid[canvasPnt + 2] = pixel_col[2] * 255;
+            /* Set the pixel_col value of the pixel */
+            var canvasPnt = point.pnt * 4;
+            self.grid[canvasPnt] = pixel_col[0] * 255;
+            self.grid[canvasPnt + 1] = pixel_col[1] * 255;
+            self.grid[canvasPnt + 2] = pixel_col[2] * 255;
 
+        });
+    });
+
+    function raytraceStrip(strip) {
+        var sPnt = 0;
+        for (var colStart = 0; colStart < self.cols; colStart += constants.SQUARE_SIZE) {
+            for (var r = 0; r < constants.SQUARE_SIZE; r++) {
+                for (var c = 0; c < constants.SQUARE_SIZE; c++) {
+                    strip[sPnt].pixel_col = raytrace(self.depth, strip[sPnt].firstRay, -1, COL_BACKGROUND, 1);
+                    sPnt++;
+                }
+            }
+        }
     }
 
-    // for (let rowStart = 0; rowStart < self.rows; rowStart += constants.SQUARE_SIZE) {
-    //     strip
-    //     var strip = renderStrip(rowStart);
-    // }
+    function raytraceSquare(strip, colStart) {
+    }
+
+
+    // var pixel_col = raytrace(self.depth, preCalcedPoint.firstRay, -1, COL_BACKGROUND, 1);
+
+
+    // for (var pnt = 0; pnt < self.firstRayCalcs.length; pnt++) {
     //
-    // function renderStrip(rowStart) {
-    //     for (let colStart = 0; colStart < self.cols; colStart += constants.SQUARE_SIZE) {
-    //         var square = renderSquare(rowStart, colStart)
+    //     var pixel_col = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
+    //
+    //     /* Set the pixel_col value of the pixel */
+    //     var canvasPnt = pnt * 4;
+    //     self.grid[canvasPnt] = pixel_col[0] * 255;
+    //     self.grid[canvasPnt + 1] = pixel_col[1] * 255;
+    //     self.grid[canvasPnt + 2] = pixel_col[2] * 255;
+    //
+    // }
+
+    // function doRender() {
+    //
+    //     var pntStart = 0;
+    //     var pntEnd = pntStart + pntSize - 1;
+    //     var row = 0;
+    //     while (pntStart < self.firstRayCalcs.length) {
+    //
+    //         // Do the main rendering, strip by strip
+    //         var rowHeight = Math.min(constants.SQUARE_SIZE, self.rows - row);
+    //         renderStrip(pntStart, rowHeight);
+    //         row += constants.SQUARE_SIZE;
+    //         pntStart += strip.length;
+    //
+    //         // Copy the strip to the grid
+    //         var s = 0;
+    //         for (var pnt = 0; pnt <= pntEnd; pnt++) {
+    //
+    //             var pixel_col = strip[s++];
+    //
+    //             /* Set the pixel_col value of the pixel */
+    //             var canvasPnt = pnt * 4;
+    //             self.grid[canvasPnt] = pixel_col[0] * 255;
+    //             self.grid[canvasPnt + 1] = pixel_col[1] * 255;
+    //             self.grid[canvasPnt + 2] = pixel_col[2] * 255;
+    //         }
     //     }
     // }
+    //
+    // // function renderStrip(pntStart, rowHeight) {
+    // //     var stripIdx = 0;
+    // //     for (var col = 0; col < self.cols; col += constants.SQUARE_SIZE) {
+    // //
+    // //         var colWidth = Math.min(constants.SQUARE_SIZE, self.cols - col);
+    // //         renderSquare(pntStart, colWidth, rowHeight, stripIdx);
+    // //
+    // //         stripIdx += constants.SQUARE_SIZE;
+    // //         pntStart += constants.SQUARE_SIZE;
+    // //     }
+    // // }
+    //
+    // function renderStrip(pntStart, rowHeight) {
+    //     var pnt = pntStart;
+    //     console.log(pntStart)
+    //     for (var stripIdx = 0; stripIdx < strip.length; stripIdx++) {
+    //         strip[stripIdx] = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
+    //         pnt++;
+    //     }
+    // }
+    //
+    // // function renderSquare(pntStart, colWidth, rowHeight, stripIdx) {
+    // //     var pnt = pntStart;
+    // //     for (var r = 0; r < rowHeight; r++) {
+    // //         for (var c = 0; c < colWidth; c++) {
+    // //             strip[stripIdx] = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
+    // //             stripIdx++;
+    // //             pnt++;
+    // //         }
+    // //         stripIdx += self.cols - colWidth;
+    // //         pnt += self.cols - colWidth;
+    // //     }
+    // // }
 
 
     /**
