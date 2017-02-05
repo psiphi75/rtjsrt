@@ -68,6 +68,9 @@ var EPSILON = constants.EPSILON;
 function Ray(origin, direction) {
     this.origin = origin;
     this.direction = direction;
+    this.dotDD = direction.dot(direction);
+    this.dotDO = direction.dot(origin);
+    this.dotOO = origin.dot(origin);
 }
 
 
@@ -210,7 +213,7 @@ RayTracer.prototype.render = function() {
     }
 
     // The main loop
-    for (let i = self.preCalcs.length - 1; i >= 0; i--) {
+    for (let i = 0; i < self.preCalcs.length; i++) {
         let strip = self.preCalcs[i];
         raytraceStrip(strip);
         for (let sPnt = 0; sPnt < strip.length; sPnt++) {

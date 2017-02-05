@@ -38,9 +38,6 @@ var COL_SQUARE_2 = constants.COL_SQUARE_2;
  */
 function Sphere(center_v) {
     this.c = center_v;      // Center position Vector
-
-    // TODO: Test this hypothosis
-    this.n = new Vector(0, 0, 0); // only, for speed purposes, Chrome V8 likes objects with same parameter setup.
     this.r = 1.0;           // Radius
     this.col = COL_WHITE;   // Colour of sphere
     this.rf = 0.0;          // Reflectivity -> 0.0 to 1.0
@@ -57,10 +54,9 @@ Sphere.prototype.intersect = function (ray) {
     //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
     //C=px*px + py*py + pz*pz - 2 * (px
 
-    // FIXME (algo): Some of these ray dot products are done multiple times for the same ray
-    var A = ray.direction.dot(ray.direction);
-    var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(this.c));
-    var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
+    var A = ray.dotDD;
+    var B = 2.0 * (ray.dotDO - ray.direction.dot(this.c));
+    var C = ray.dotOO - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
     var D = B * B - 4.0 * A * C;
     if (D > 0.0) {
         var sqrtD = Math.sqrt(D);
@@ -117,9 +113,7 @@ Disc.prototype.intersect = function (ray) {
     var d = this.n.dot(ray.direction);
     var t = (this.d - this.n.dot(ray.origin)) / d;
     if (t > 0.0) {
-        // FIXME (algo): pi is a common calculation
-        var pi = ray.origin.add(ray.direction.scale(t));
-        pi.subInplace(this.c);
+        var pi = ray.origin.add(ray.direction.scale(t)).sub(this.c);
         var pi_sub_c = pi.length();
         if (pi_sub_c < this.r) {
             if (Math.sin(pi.x * 5.0) * Math.sin(pi.z * 5.0) > 0.0) {

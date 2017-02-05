@@ -51,3 +51,7 @@ SQUARE_SIZE = 4 => 213/min
 Reduces shadow calculations
 
 => 238/min
+
+# 14 - RayTrace from bottom up
+
+=> 238/min
