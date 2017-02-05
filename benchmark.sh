@@ -10,24 +10,26 @@ BENCHMARK_NAME="$1"
 DIR="benchmarks/${BENCHMARK_NAME}"
 BENCH_CSV=${BENCHMARK_NAME}.csv
 
+NODE=node --harmony-simd
+
 #
 # Run the benchmark
 #
 
 echo "last git commit id: $(git rev-parse HEAD)" > ${BENCH_CSV}
-node run-server >> ${BENCH_CSV}
+${NODE} run-server >> ${BENCH_CSV}
 
 #
 # Run the profiler
 #
 
-PROFILE=1 node run-server
+PROFILE=1 ${NODE} run-server
 
 #
 # Code tracing: Get the IRHydra2 data
 #
 
-node  --trace-hydrogen                   \
+${NODE} --trace-hydrogen                   \
       --trace-phase=Z                    \
       --trace-deopt                      \
       --code-comments                    \

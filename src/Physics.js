@@ -53,10 +53,10 @@ Physics.prototype.apply_forces = function () {
         var sin_t = Math.sin(angle);
         var cos_t = Math.cos(angle);
 
-        var x = p[0];
-        var z = p[2];
-        p[0] = x * cos_t - z * sin_t;
-        p[2] = z * cos_t + x * sin_t;
+        var x = vector.get(p, 0);
+        var z = vector.get(p, 2);
+        vector.set(p, 0, x * cos_t - z * sin_t);
+        vector.set(p, 2, z * cos_t + x * sin_t);
     }
 };
 

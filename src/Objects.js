@@ -118,7 +118,7 @@ Disc.prototype.intersect = function (ray) {
         var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
         var pi_sub_c = vector.length(vector.sub(pi, this.c));
         if (pi_sub_c < this.r) {
-            if (Math.sin(pi[0] * 5.0) * Math.sin(pi[2] * 5.0) > 0.0) {
+            if (Math.sin(vector.get(pi, 0) * 5.0) * Math.sin(vector.get(pi, 2) * 5.0) > 0.0) {
                 return {
                     col: COL_SQUARE_1,
                     t: t
@@ -140,7 +140,7 @@ Disc.prototype.intersect = function (ray) {
  * @returns {vector} the normal vector.
  */
 Disc.prototype.get_norm = function () {
-    return vector.make(this.n[0], this.n[1], this.n[2]);
+    return vector.make(this.n);
 };
 Disc.prototype.set_diffuse = function (diff) {
     this.diff = diff;

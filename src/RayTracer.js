@@ -70,6 +70,8 @@ var vNORM = vector.normalise;
 var vSCALE = vector.scale;
 var vLENGTH = vector.length;
 var vMAXVAL = vector.max_val;
+var vSET = vector.set;
+var vGET = vector.get;
 
 /**
  * A ray that gets cast.
@@ -165,6 +167,14 @@ function RayTracer(cols, rows, grid, do_physics) {
 /**
  * Render the scene.  This will update the data object that was provided.
  */
+var TRACE = false;
+function P(name, o) {
+
+    if (TRACE) {
+        if (o instanceof Ray) console.log(name, o.direction, o.origin);
+        // if (o instanceof Ray) console.log(name, o);
+    }
+}
 RayTracer.prototype.render = function() {
 
     var self = this;
@@ -178,33 +188,34 @@ RayTracer.prototype.render = function() {
     var yDirectionStart = self.scene.eye.h / 2.0;
     var direction = vMAKE(xDirectionStart, yDirectionStart, self.scene.eye.d);
     var origin = self.scene.eye.c;
-    var dnx = self.scene.eye.w / (self.cols - 1.0);
-    var dny = self.scene.eye.h / (self.rows - 1.0);
+    var dnx = vMAKE(self.scene.eye.w / (self.cols - 1.0), 0, 0);
+    var dny = vMAKE(0, self.scene.eye.h / (self.rows - 1.0), 0);
     var gridPnt = 0;
 
     for (var row = 0; row < self.rows; row++) {
 
         for (var col = 0; col < self.cols; col++) {
 
-            direction[0] += dnx;
+            direction = vADD(direction, dnx);
 
             var firstRay = new Ray(origin, vNORM(direction));
             var pixel_col = raytrace(self.depth, firstRay, -1, COL_BACKGROUND, 1);
-
+            if (row === 400 && col === 233) TRACE = true; else TRACE = false;
+            if (TRACE) console.log('Tracing')
             // limit the colour - extreme intensities become white
             pixel_col = vSCALE(255, pixel_col);
             pixel_col = vMAXVAL(255, pixel_col);
 
             /* Set the pixel_col value of the pixel */
-            self.grid[gridPnt] = Math.round(pixel_col[0]);
-            self.grid[gridPnt + 1] = Math.round(pixel_col[1]);
-            self.grid[gridPnt + 2] = Math.round(pixel_col[2]);
+            self.grid[gridPnt] = Math.round(vGET(pixel_col, 0));
+            self.grid[gridPnt + 1] = Math.round(vGET(pixel_col, 1));
+            self.grid[gridPnt + 2] = Math.round(vGET(pixel_col, 2));
             gridPnt += 4;
 
         }
 
-        direction[0] = xDirectionStart;
-        direction[1] -= dny;
+        vSET(direction, 0, xDirectionStart);
+        direction = vSUB(direction, dny);
 
     }
 
@@ -229,7 +240,8 @@ RayTracer.prototype.render = function() {
             if (i !== source_i) {
                 var obj = self.scene.objs[i];
                 var intersection = obj.intersect(ray);
-
+                P('intersection (ray)', ray);
+                P('intersection (intersection)', intersection);
                 if (intersection) {
                     if (intersection.t < closestObjT) {
                         closestObjT = intersection.t;
@@ -245,6 +257,7 @@ RayTracer.prototype.render = function() {
 
         // If we found an object, get the shade for the object.  Otherwise return the background
         if (closestObj) {
+            P('intersection found (ray)', ray);
             return getShadeAtPoint(depth, ray, closestObj.i, closestObj.intersection, closestObj.obj, colour, rindex);
         } else {
             return colour;
@@ -256,6 +269,7 @@ RayTracer.prototype.render = function() {
         // object found, return the colour
 
         colour = vSCALE(obj.ambient_light, intersection.col);
+        P('colour 1', colour);
         var pi = vADD(ray.origin, vSCALE(intersection.t, ray.direction)); // the position of the intersection
 
         var light = self.scene.lights[0];
