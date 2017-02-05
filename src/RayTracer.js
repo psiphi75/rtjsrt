@@ -210,8 +210,7 @@ RayTracer.prototype.render = function() {
     }
 
     // The main loop
-    // self.preCalcs.forEach(function(strip) {
-    for (let i = 0; i < self.preCalcs.length; i++) {
+    for (let i = self.preCalcs.length - 1; i >= 0; i--) {
         let strip = self.preCalcs[i];
         raytraceStrip(strip);
         for (let sPnt = 0; sPnt < strip.length; sPnt++) {
@@ -318,17 +317,17 @@ RayTracer.prototype.render = function() {
 
         // If we found an object, get the shade for the object.  Otherwise return the background
         if (closestObj) {
-            return getShadeAtPoint(depth, ray, closestObj.i, closestObj.intersection, closestObj.obj, colour, rindex);
+            return getShadeAtPoint(depth, ray, closestObj.i, closestObj.intersection, closestObj.obj, rindex);
         } else {
             return colour;
         }
 
     }
 
-    function getShadeAtPoint(depth, ray, source_i, intersection, obj, colour, rindex) {
+    function getShadeAtPoint(depth, ray, source_i, intersection, obj, rindex) {
         // object found, return the colour
 
-        colour = intersection.col.scale(obj.ambient_light);
+        var colour = intersection.col.scale(obj.ambient_light);
         var pi = ray.origin.add(ray.direction.scale(intersection.t)); // the position of the intersection
 
         var light = self.scene.lights[0];
