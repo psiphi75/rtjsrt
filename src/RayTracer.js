@@ -216,21 +216,6 @@ RayTracer.prototype.render = function() {
         self.physics.apply_forces();
     }
 
-
-    // // The main loop
-    // self.preCalcs.forEach(function(strip) {
-    //     strip.forEach(function(preCalcedPoint) {
-    //         var pixel_col = raytrace(self.depth, preCalcedPoint.firstRay, -1, COL_BACKGROUND, 1);
-    //
-    //         /* Set the pixel_col value of the pixel */
-    //         var canvasPnt = preCalcedPoint.pnt * 4;
-    //         self.grid[canvasPnt] = pixel_col[0] * 255;
-    //         self.grid[canvasPnt + 1] = pixel_col[1] * 255;
-    //         self.grid[canvasPnt + 2] = pixel_col[2] * 255;
-    //
-    //     });
-    // });
-
     // The main loop
     self.preCalcs.forEach(function(strip) {
         raytraceStrip(strip);
@@ -248,97 +233,53 @@ RayTracer.prototype.render = function() {
     });
 
     function raytraceStrip(strip) {
-        var sPnt = 0;
-        for (var colStart = 0; colStart < self.cols; colStart += constants.SQUARE_SIZE) {
-            for (var r = 0; r < constants.SQUARE_SIZE; r++) {
-                for (var c = 0; c < constants.SQUARE_SIZE; c++) {
-                    strip[sPnt].pixel_col = raytrace(self.depth, strip[sPnt].firstRay, -1, COL_BACKGROUND, 1);
-                    sPnt++;
+
+        var sPntTopLeft = 0;
+        var sPntTopRight = constants.SQUARE_SIZE - 1;
+        var sPntBottomLeft = (constants.SQUARE_SIZE - 1) * self.cols;
+        var sPntBottomRight = sPntBottomLeft + constants.SQUARE_SIZE - 1;
+
+        // For Each Square
+        for (; sPntTopLeft < self.cols; ) {
+
+            var pixel_colTL = raytrace(self.depth, strip[sPntTopLeft].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colTR = raytrace(self.depth, strip[sPntTopRight].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colBL = raytrace(self.depth, strip[sPntBottomLeft].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colBR = raytrace(self.depth, strip[sPntBottomRight].firstRay, -1, COL_BACKGROUND, 1);
+
+            var sPnt = sPntTopLeft;
+
+            var pixSum = vADD(vADD(vADD(pixel_colTL, pixel_colTR), pixel_colBL), pixel_colBR);
+            if (pixSum[0] + pixSum[1] + pixSum[2] === 0) {
+
+                // There is NO colour here, we can set all the values to zero
+                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
+                    for (let c = 0; c < constants.SQUARE_SIZE; c++) {
+                        strip[sPnt].pixel_col = constants.COL_BLACK;
+                        sPnt++;
+                    }
+                    sPnt += self.cols - constants.SQUARE_SIZE;
+                }
+
+            } else {
+
+                // There IS colour here, we need to calculate each square
+                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
+                    for (let c = 0; c < constants.SQUARE_SIZE; c++) {
+                        strip[sPnt].pixel_col = raytrace(self.depth, strip[sPnt].firstRay, -1, COL_BACKGROUND, 1);
+                        sPnt++;
+                    }
+                    sPnt += self.cols - constants.SQUARE_SIZE;
                 }
             }
+
+            sPntTopLeft += constants.SQUARE_SIZE;
+            sPntTopRight += constants.SQUARE_SIZE;
+            sPntBottomLeft += constants.SQUARE_SIZE;
+            sPntBottomRight += constants.SQUARE_SIZE;
+
         }
     }
-
-    function raytraceSquare(strip, colStart) {
-    }
-
-
-    // var pixel_col = raytrace(self.depth, preCalcedPoint.firstRay, -1, COL_BACKGROUND, 1);
-
-
-    // for (var pnt = 0; pnt < self.firstRayCalcs.length; pnt++) {
-    //
-    //     var pixel_col = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
-    //
-    //     /* Set the pixel_col value of the pixel */
-    //     var canvasPnt = pnt * 4;
-    //     self.grid[canvasPnt] = pixel_col[0] * 255;
-    //     self.grid[canvasPnt + 1] = pixel_col[1] * 255;
-    //     self.grid[canvasPnt + 2] = pixel_col[2] * 255;
-    //
-    // }
-
-    // function doRender() {
-    //
-    //     var pntStart = 0;
-    //     var pntEnd = pntStart + pntSize - 1;
-    //     var row = 0;
-    //     while (pntStart < self.firstRayCalcs.length) {
-    //
-    //         // Do the main rendering, strip by strip
-    //         var rowHeight = Math.min(constants.SQUARE_SIZE, self.rows - row);
-    //         renderStrip(pntStart, rowHeight);
-    //         row += constants.SQUARE_SIZE;
-    //         pntStart += strip.length;
-    //
-    //         // Copy the strip to the grid
-    //         var s = 0;
-    //         for (var pnt = 0; pnt <= pntEnd; pnt++) {
-    //
-    //             var pixel_col = strip[s++];
-    //
-    //             /* Set the pixel_col value of the pixel */
-    //             var canvasPnt = pnt * 4;
-    //             self.grid[canvasPnt] = pixel_col[0] * 255;
-    //             self.grid[canvasPnt + 1] = pixel_col[1] * 255;
-    //             self.grid[canvasPnt + 2] = pixel_col[2] * 255;
-    //         }
-    //     }
-    // }
-    //
-    // // function renderStrip(pntStart, rowHeight) {
-    // //     var stripIdx = 0;
-    // //     for (var col = 0; col < self.cols; col += constants.SQUARE_SIZE) {
-    // //
-    // //         var colWidth = Math.min(constants.SQUARE_SIZE, self.cols - col);
-    // //         renderSquare(pntStart, colWidth, rowHeight, stripIdx);
-    // //
-    // //         stripIdx += constants.SQUARE_SIZE;
-    // //         pntStart += constants.SQUARE_SIZE;
-    // //     }
-    // // }
-    //
-    // function renderStrip(pntStart, rowHeight) {
-    //     var pnt = pntStart;
-    //     console.log(pntStart)
-    //     for (var stripIdx = 0; stripIdx < strip.length; stripIdx++) {
-    //         strip[stripIdx] = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
-    //         pnt++;
-    //     }
-    // }
-    //
-    // // function renderSquare(pntStart, colWidth, rowHeight, stripIdx) {
-    // //     var pnt = pntStart;
-    // //     for (var r = 0; r < rowHeight; r++) {
-    // //         for (var c = 0; c < colWidth; c++) {
-    // //             strip[stripIdx] = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
-    // //             stripIdx++;
-    // //             pnt++;
-    // //         }
-    // //         stripIdx += self.cols - colWidth;
-    // //         pnt += self.cols - colWidth;
-    // //     }
-    // // }
 
 
     /**
