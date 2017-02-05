@@ -56,7 +56,6 @@ Sphere.prototype.intersect = function (ray) {
     //C=px*px + py*py + pz*pz - 2 * (px
 
     // FIXME (algo): Some of these ray dot products are done multiple times for the same ray
-    // FIXME (perf): Reduce number of objects property lookups by making constants
     var A = vector.dot(ray.direction, ray.direction);
     var B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
     var C = vector.dot(ray.origin, ray.origin) - 2.0 * vector.dot(ray.origin, this.c) + vector.dot(this.c, this.c) - this.r * this.r;

@@ -34,6 +34,9 @@ const constants = {
     WIDTH: 700,
     HEIGHT: 700,
 
+    // How big a grid size to use for checking contents (in pixels)
+    CONTENT_SIZE: 8,
+
     // Named Colours
     COL_WHITE: vector.make(1, 1, 1),
     COL_RED: vector.make(1, 0, 0),

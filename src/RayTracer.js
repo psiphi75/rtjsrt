@@ -44,7 +44,6 @@
 
 // TODO: Break up shade() - allows better analysis
 
-// TODO (perf): Make array a typed array OR make vector a proper object
 // TODO (perf): See how ASM.js makes performance improvements
 
 var Objects = require('./Objects');
@@ -98,6 +97,7 @@ function RayTracer(cols, rows, grid, do_physics) {
     var self = this;
 
     init_scene();
+    init_calcs();
 
     /**************************************/
     /* Create the scene, add our objects. */
@@ -167,6 +167,35 @@ function RayTracer(cols, rows, grid, do_physics) {
         var light = new Objects.Light(light_c, light_col);
         self.scene.add_light(light);
     }
+
+    function init_calcs() {
+        // Start in the top left
+        var xDirectionStart = -self.scene.eye.w / 2.0;
+        var yDirectionStart = self.scene.eye.h / 2.0;
+        var direction = vMAKE(xDirectionStart, yDirectionStart, self.scene.eye.d);
+        var origin = self.scene.eye.c;
+        var dnx = vMAKE(self.scene.eye.w / (self.cols - 1.0), 0, 0);
+        var dny = vMAKE(0, self.scene.eye.h / (self.rows - 1.0), 0);
+        var gridPnt = 0;
+
+        self.preCalcs = [];
+
+        for (var row = 0; row < self.rows; row++) {
+            self.preCalcs[row] = [];
+            for (var col = 0; col < self.cols; col++) {
+                vADD_IP(direction, dnx);
+                var firstRay = new Ray(origin, vNORM(direction));
+                self.preCalcs[row].push({
+                    gridPnt: gridPnt,
+                    firstRay: firstRay
+                });
+                gridPnt += 4;
+            }
+            vSET(direction, 0, xDirectionStart);
+            vSUB_IP(direction, dny);
+        }
+
+    }
 }
 /**
  * Render the scene.  This will update the data object that was provided.
@@ -179,43 +208,30 @@ RayTracer.prototype.render = function() {
         self.physics.apply_forces();
     }
 
-
-    // Start in the top left
-    var xDirectionStart = -self.scene.eye.w / 2.0;
-    var yDirectionStart = self.scene.eye.h / 2.0;
-    var direction = vMAKE(xDirectionStart, yDirectionStart, self.scene.eye.d);
-    var origin = self.scene.eye.c;
-    var dnx = vMAKE(self.scene.eye.w / (self.cols - 1.0), 0, 0);
-    var dny = vMAKE(0, self.scene.eye.h / (self.rows - 1.0), 0);
-    var gridPnt = 0;
-
     for (var row = 0; row < self.rows; row++) {
-
         for (var col = 0; col < self.cols; col++) {
 
-            vADD_IP(direction, dnx);
-
-            var firstRay = new Ray(origin, vNORM(direction));
-            var pixel_col = raytrace(self.depth, firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_col = raytrace(self.depth, self.preCalcs[row][col].firstRay, -1, COL_BACKGROUND, 1);
             // if (row === 400 && col === 233) TRACE = true; else TRACE = false;
             // if (TRACE) console.log('Tracing')
             // limit the colour - extreme intensities become white
             vSCALE_IP(255, pixel_col);
-            // FIXME (perf): use & 255,  This will round numbers too
             vMAXVAL_IP(255, pixel_col);
 
             /* Set the pixel_col value of the pixel */
-            self.grid[gridPnt] = Math.round(vGET(pixel_col, 0));
-            self.grid[gridPnt + 1] = Math.round(vGET(pixel_col, 1));
-            self.grid[gridPnt + 2] = Math.round(vGET(pixel_col, 2));
-            gridPnt += 4;
+            var gridPnt = self.preCalcs[row][col].gridPnt;
+            self.grid[gridPnt] = vGET(pixel_col, 0) & 255;
+            self.grid[gridPnt + 1] = vGET(pixel_col, 1) & 255;
+            self.grid[gridPnt + 2] = vGET(pixel_col, 2) & 255;
 
         }
 
-        vSET(direction, 0, xDirectionStart);
-        vSUB_IP(direction, dny);
 
     }
+
+    // for (var rowStart = 0; rowStart < self.rows; rowStart++) {
+    //     var strip = renderStrip(rowStart);
+    // }
 
 
     /**
@@ -337,8 +353,8 @@ RayTracer.prototype.render = function() {
             var cosT2 = 1 - n * n * (1.0 - cosI * cosI);
             if (cosT2 > 0) {
                 vSCALE_IP(n * cosI - Math.sqrt(cosT2), rN);
-                var T = ray.direction;  // NOTE: Don't use ray after this point
-                vSCALE_IP(n, T);
+                var T = ray.direction;
+                T = vSCALE(n, T);
                 vADD_IP(T, rN);
                 var refrRay = new Ray(vADD(pi, vSCALE(EPSILON, T)), T);
                 var rfrCol = raytrace(depth - 1, refrRay, source_i, COL_BACKGROUND, obj.rfr);
