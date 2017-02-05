@@ -59,3 +59,19 @@ Reduces shadow calculations
 # 15 - Precalc some of the ray math
 
 => 229/min
+
+Reverted back.
+
+# 16 - Refactored raytrace()
+
+=> 248/min
+
+Added purposful timing.  Found the following results (didn't believe the profiler):
+Function ----- time (ms) -- Calls
+raytrace        569,       661011
+getShadeAtPoint 215,       365787
+intersect       782,      3622240
+
+# 17 - Tried forEach loop on native Array
+
+=> 171/min

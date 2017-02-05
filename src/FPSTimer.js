@@ -30,8 +30,11 @@
  */
 function FPSTimer() {
     var fpsTimes = [];
+    var times = [];
     var startTime;
     var now;
+    var pauseStart = 0;
+    var counter = 0;
 
     if (typeof performance === 'undefined') {
         // We are using NodeJS
@@ -42,12 +45,23 @@ function FPSTimer() {
     }
 
     return {
+        count: function() {
+            counter++;
+        },
         start: function() {
             startTime = now();
+        },
+        pause: function() {
+            pauseStart = now();
+        },
+        resume: function() {
+            var pausedTime = pauseStart - now();
+            startTime -= pausedTime;
         },
         stop: function() {
             if (startTime === undefined) return NaN;
             var stopTime = now();
+            times.push(stopTime - startTime);
             var fpsTime = 1000 / (stopTime - startTime);
             startTime = undefined;
             fpsTimes.push(fpsTime);
@@ -59,7 +73,11 @@ function FPSTimer() {
         average: function() {
             var sum = fpsTimes.reduce(function(a, b) { return a + b; });
             return sum / fpsTimes.length;
-        }
+        },
+        totalTime: function() {
+            return times.reduce(function(a, b) { return a + b; });
+        },
+        getCounter: function() { return counter; }
     };
 }
 
