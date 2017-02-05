@@ -304,27 +304,27 @@ RayTracer.prototype.render = function() {
 
         var closestObjId = -1;
         var closestInt;
-        // var len = objs.length;
+        var len = objs.length;
 
-        objs.forEach(function(obj, i) {
+        for (var i = 0; i < len; i++) {
             // Don't intersect object with itself
-            if (i === source_i) return;
-                // var obj = objs[i];
+            if (i !== source_i) {
+
+                var obj = objs[i];
                 // self.timers.raytrace.pause();
                 // self.timers.intersect.count();
                 // self.timers.intersect.start();
                 var intersection = obj.intersect(ray);
                 // self.timers.intersect.stop();
                 // self.timers.raytrace.resume();
-                if (intersection !== undefined) {
+                if (intersection.hit) {
                     if (closestObjId === -1 || intersection.t < closestInt.t) {
                         closestInt = intersection;
                         closestObjId = i;
                     }
                 }
-        });
-        // for (var i = 0; i < len; i++) {
-        // }
+            }
+        }
 
         // If we found an object, get the shade for the object.  Otherwise return the background
         // self.timers.raytrace.stop();
@@ -343,9 +343,9 @@ RayTracer.prototype.render = function() {
         // self.timers.getShadeAtPoint.resume();
         // self.timers.getShadeAtPoint.count();
 
-        var obj = self.scene.objs[source_i];
+        var obj = objs[source_i];
         colour = intersection.col.scale(obj.ambient_light);
-        var pi = ray.origin.add(ray.direction.scale(intersection.t)); // the position of the intersection
+        var pi = intersection.pi; // the position of the intersection
 
         var light = self.scene.lights[0];
 
@@ -355,7 +355,7 @@ RayTracer.prototype.render = function() {
         var tdist = L.length();
         var Lt = L.scale(1 / tdist);
         var r = new Ray(pi.add(Lt.scale(EPSILON)), Lt);
-        for (var i = 0; i < self.scene.objs.length; i++) {
+        for (var i = 0; i < objs.length; i++) {
 
             // Don't intersect with self...
             // ... and check if an object is in the way of the light source
@@ -364,9 +364,9 @@ RayTracer.prototype.render = function() {
             // self.timers.intersect.start();
             // self.timers.intersect.count();
             if (source_i !== i
-                && self.scene.objs[source_i].canReceiveShadow
-                && self.scene.objs[i].canCreateShadow
-                && self.scene.objs[i].intersect(r) !== undefined) {
+                && objs[source_i].canReceiveShadow
+                && objs[i].canCreateShadow
+                && objs[i].intersect(r).hit) {
                     // self.timers.intersect.stop();
                     // self.timers.getShadeAtPoint.resume();
                 shade = 0;

@@ -31,6 +31,13 @@ var COL_SQUARE_1 = constants.COL_SQUARE_1;
 var COL_SQUARE_2 = constants.COL_SQUARE_2;
 
 
+function Intersection(hit, col, t, pi) {
+    this.hit = hit;
+    this.col = col;
+    this.t = t;
+    this.pi = pi;
+}
+
 /**
  * Make a sphere.
  * @param {Vector} center_v    the center point of the Sphere
@@ -61,15 +68,14 @@ Sphere.prototype.intersect = function (ray) {
     if (D > 0.0) {
         var sqrtD = Math.sqrt(D);
         if (-B > sqrtD) {
-            return {
-                col: this.col,
-                t: (-B - sqrtD) / (2.0 * A)
-            };
+            var t = (-B - sqrtD) / (2.0 * A);
+            var pi = ray.origin.add(ray.direction.scale(t));
+            return new Intersection(true, this.col, t, pi);
         }
     }
 
     // No hit, or ray is in wrong direction (when t < zero)
-    return undefined;
+    return new Intersection(false);
 };
 /**
  * Get the normal at point p.
@@ -117,21 +123,15 @@ Disc.prototype.intersect = function (ray) {
         var pi_sub_c = pi.length();
         if (pi_sub_c < this.r) {
             if (Math.sin(pi.x * 5.0) * Math.sin(pi.z * 5.0) > 0.0) {
-                return {
-                    col: COL_SQUARE_1,
-                    t: t
-                };
+                return new Intersection(true, COL_SQUARE_1, t, pi);
             } else {
-                return {
-                    col: COL_SQUARE_2,
-                    t: t
-                };
+                return new Intersection(true, COL_SQUARE_2, t, pi);
             }
         }
     }
 
     // No intersection
-    return undefined;
+    return new Intersection(false);
 };
 /**
  * Return a copy of the normal Vector for this disc.
