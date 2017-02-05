@@ -140,7 +140,7 @@ Disc.prototype.intersect = function (ray) {
  * @returns {vector} the normal vector.
  */
 Disc.prototype.get_norm = function () {
-    return vector.make(this.n);
+    return vector.copy(this.n);
 };
 Disc.prototype.set_diffuse = function (diff) {
     this.diff = diff;

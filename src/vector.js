@@ -30,11 +30,10 @@
 
 var vector = {
     make: function (x, y, z) {
-        if (typeof x === 'number') {
-            return [x, y, z];
-        } else {
-            return [x[0], x[1], x[2]];
-        }
+        return [x, y, z];
+    },
+    copy: function (v) {
+        return [v[0], v[1], v[2]];
     },
     dot: function (v, w) {
         return v[0] * w[0] + v[1] * w[1] + v[2] * w[2];

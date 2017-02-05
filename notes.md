@@ -17,3 +17,12 @@ It's going be slow for some time, read: https://groups.google.com/a/chromium.org
 # 06 - Enhanced vector math to re-use objects
 
 # 07 - Use const and let
+
+# 08 - Do some pre-calculations
+
+# 09 - Render Squares
+
+I was expecting a 20 to 30% boost here.  Not a slow down.
+
+If the corners of the square are black, then we just fill in the square.  The funny
+this is that this actually went slower.  Need to look at the profiler.

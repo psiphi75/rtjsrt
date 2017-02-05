@@ -127,7 +127,7 @@ function RayTracer(cols, rows, grid, do_physics) {
         var sph_center = vMAKE(0.7, 1.2, 0.4);
         var sph = new Objects.Sphere(sph_center);
         sph.r = 1.0; // Radius
-        sph.col = vMAKE(constants.COL_RED); // Colour of sphere
+        sph.col = constants.COL_RED; // Colour of sphere
         sph.rfl = 0.9; // Reflectivity -> 0.0 to 1.0
         sph.rfr = 0; // Refractivity
         sph.ambient_light = 0.2;
@@ -139,7 +139,7 @@ function RayTracer(cols, rows, grid, do_physics) {
         var sph2_center = vMAKE(-1.5, 1.6, 0.4);
         var sph2 = new Objects.Sphere(sph2_center);
         sph2.r = 0.8;
-        sph2.col = vMAKE(constants.COL_WHITE);
+        sph2.col = constants.COL_WHITE;
         sph2.rfl = 0.6;
         sph2.rfr = 0; // Refractivity
         sph2.ambient_light = 0.2;
@@ -151,7 +151,7 @@ function RayTracer(cols, rows, grid, do_physics) {
         var sph3_center = vMAKE(1.2, 0.8, -1.8);
         var sph3 = new Objects.Sphere(sph3_center);
         sph3.r = 0.8;
-        sph3.col = vMAKE(constants.COL_WHITE);
+        sph3.col = constants.COL_WHITE;
         sph3.rfl = 0.4;
         sph3.rfr = 1.12; // Refractivity
         sph3.ambient_light = 0.05;
@@ -161,7 +161,7 @@ function RayTracer(cols, rows, grid, do_physics) {
 
         // Add a light
         var light_c = vMAKE(5, 7.5, -2.0);
-        var light_col = vMAKE(constants.COL_WHITE);
+        var light_col = constants.COL_WHITE;
         var light = new Objects.Light(light_c, light_col);
         self.scene.add_light(light);
     }
@@ -234,6 +234,12 @@ RayTracer.prototype.render = function() {
 
     function raytraceStrip(strip) {
 
+        function setRaytrace(s) {
+            return raytrace(self.depth, strip[s].firstRay, -1, COL_BACKGROUND, 1);
+        }
+
+        function setBlack() { return constants.COL_BLACK; }
+
         var sPntTopLeft = 0;
         var sPntTopRight = constants.SQUARE_SIZE - 1;
         var sPntBottomLeft = (constants.SQUARE_SIZE - 1) * self.cols;
@@ -249,28 +255,22 @@ RayTracer.prototype.render = function() {
 
             var sPnt = sPntTopLeft;
 
+            // Check to see if we can fill the square with black
             var pixSum = vADD(vADD(vADD(pixel_colTL, pixel_colTR), pixel_colBL), pixel_colBR);
+            var fn;
             if (pixSum[0] + pixSum[1] + pixSum[2] === 0) {
-
-                // There is NO colour here, we can set all the values to zero
-                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                    for (let c = 0; c < constants.SQUARE_SIZE; c++) {
-                        strip[sPnt].pixel_col = constants.COL_BLACK;
-                        sPnt++;
-                    }
-                    sPnt += self.cols - constants.SQUARE_SIZE;
-                }
-
+                fn = setBlack;
             } else {
+                fn = setRaytrace;
+            }
 
-                // There IS colour here, we need to calculate each square
-                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                    for (let c = 0; c < constants.SQUARE_SIZE; c++) {
-                        strip[sPnt].pixel_col = raytrace(self.depth, strip[sPnt].firstRay, -1, COL_BACKGROUND, 1);
-                        sPnt++;
-                    }
-                    sPnt += self.cols - constants.SQUARE_SIZE;
+            // Fill the square with colour (or black)
+            for (let r = 0; r < constants.SQUARE_SIZE; r++) {
+                for (let c = 0; c < constants.SQUARE_SIZE; c++) {
+                    strip[sPnt].pixel_col = fn(sPnt);
+                    sPnt++;
                 }
+                sPnt += self.cols - constants.SQUARE_SIZE;
             }
 
             sPntTopLeft += constants.SQUARE_SIZE;
