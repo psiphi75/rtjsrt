@@ -10,13 +10,14 @@ BENCHMARK_NAME="$1"
 DIR="benchmarks/${BENCHMARK_NAME}"
 BENCH_CSV=${BENCHMARK_NAME}.csv
 
-NODE="node --harmony-simd"
+NODE="node"
 
 #
 # Run the benchmark
 #
 
 echo "last git commit id: $(git rev-parse HEAD)" > ${BENCH_CSV}
+echo "node.js version: $(node --version)" > ${BENCH_CSV}
 ${NODE} run-server >> ${BENCH_CSV}
 
 #

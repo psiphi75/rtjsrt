@@ -57,12 +57,12 @@ Sphere.prototype.intersect = function (ray) {
 
     // FIXME (algo): Some of these ray dot products are done multiple times for the same ray
     // FIXME (perf): Reduce number of objects property lookups by making constants
-    var A = vector.dot(ray.direction, ray.direction);
-    var B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
-    var C = vector.dot(ray.origin, ray.origin) - 2.0 * vector.dot(ray.origin, this.c) + vector.dot(this.c, this.c) - this.r * this.r;
-    var D = B * B - 4.0 * A * C;
+    const A = vector.dot(ray.direction, ray.direction);
+    const B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
+    const C = vector.dot(ray.origin, ray.origin) - 2.0 * vector.dot(ray.origin, this.c) + vector.dot(this.c, this.c) - this.r * this.r;
+    const D = B * B - 4.0 * A * C;
     if (D > 0.0) {
-        var sqrtD = Math.sqrt(D);
+        const sqrtD = Math.sqrt(D);
         if (-B > sqrtD) {
             return {
                 col: this.col,
@@ -111,13 +111,13 @@ function Disc(center_v, norm_v) {
  */
 Disc.prototype.intersect = function (ray) {
 
-    var d = vector.dot(this.n, ray.direction);
-    var t = (this.d - vector.dot(this.n, ray.origin)) / d;
+    const d = vector.dot(this.n, ray.direction);
+    const t = (this.d - vector.dot(this.n, ray.origin)) / d;
     if (t > 0.0) {
         // FIXME (algo): pi is a common calculation
-        var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
+        const pi = vector.add(ray.origin, vector.scale(t, ray.direction));
         vector.subInplace(pi, this.c);
-        var pi_sub_c = vector.length(pi);
+        const pi_sub_c = vector.length(pi);
         if (pi_sub_c < this.r) {
             if (Math.sin(vector.get(pi, 0) * 5.0) * Math.sin(vector.get(pi, 2) * 5.0) > 0.0) {
                 return {
