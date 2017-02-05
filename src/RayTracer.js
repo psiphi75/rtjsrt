@@ -63,13 +63,19 @@ var EPSILON = constants.EPSILON;
 
 var vMAKE = vector.make;
 var vADD = vector.add;
+var vADD_IP = vector.addInplace;
 var vPRODUCT = vector.product;
+var vPRODUCT_IP = vector.productInplace;
 var vSUB = vector.sub;
+var vSUB_IP = vector.subInplace;
 var vDOT = vector.dot;
+var vDOT_IP = vector.dotInplace;
 var vNORM = vector.normalise;
+var vNORM_IP = vector.normaliseInplace;
 var vSCALE = vector.scale;
+var vSCALE_IP = vector.scaleInplace;
 var vLENGTH = vector.length;
-var vMAXVAL = vector.max_val;
+var vMAXVAL_IP = vector.max_valInplace;
 var vSET = vector.set;
 var vGET = vector.get;
 
@@ -167,14 +173,7 @@ function RayTracer(cols, rows, grid, do_physics) {
 /**
  * Render the scene.  This will update the data object that was provided.
  */
-var TRACE = false;
-function P(name, o) {
-
-    if (TRACE) {
-        if (o instanceof Ray) console.log(name, o.direction, o.origin);
-        // if (o instanceof Ray) console.log(name, o);
-    }
-}
+// var TRACE = false;
 RayTracer.prototype.render = function() {
 
     var self = this;
@@ -196,15 +195,16 @@ RayTracer.prototype.render = function() {
 
         for (var col = 0; col < self.cols; col++) {
 
-            direction = vADD(direction, dnx);
+            vADD_IP(direction, dnx);
 
             var firstRay = new Ray(origin, vNORM(direction));
             var pixel_col = raytrace(self.depth, firstRay, -1, COL_BACKGROUND, 1);
             // if (row === 400 && col === 233) TRACE = true; else TRACE = false;
             // if (TRACE) console.log('Tracing')
             // limit the colour - extreme intensities become white
-            pixel_col = vSCALE(255, pixel_col);
-            pixel_col = vMAXVAL(255, pixel_col);
+            vSCALE_IP(255, pixel_col);
+            // FIXME (perf): use & 255,  This will round numbers too
+            vMAXVAL_IP(255, pixel_col);
 
             /* Set the pixel_col value of the pixel */
             self.grid[gridPnt] = Math.round(vGET(pixel_col, 0));
@@ -215,7 +215,7 @@ RayTracer.prototype.render = function() {
         }
 
         vSET(direction, 0, xDirectionStart);
-        direction = vSUB(direction, dny);
+        vSUB_IP(direction, dny);
 
     }
 
@@ -240,8 +240,6 @@ RayTracer.prototype.render = function() {
             if (i !== source_i) {
                 var obj = self.scene.objs[i];
                 var intersection = obj.intersect(ray);
-                P('intersection (ray)', ray);
-                P('intersection (intersection)', intersection);
                 if (intersection) {
                     if (intersection.t < closestObjT) {
                         closestObjT = intersection.t;
@@ -257,7 +255,6 @@ RayTracer.prototype.render = function() {
 
         // If we found an object, get the shade for the object.  Otherwise return the background
         if (closestObj) {
-            P('intersection found (ray)', ray);
             return getShadeAtPoint(depth, ray, closestObj.i, closestObj.intersection, closestObj.obj, colour, rindex);
         } else {
             return colour;
@@ -269,7 +266,6 @@ RayTracer.prototype.render = function() {
         // object found, return the colour
 
         colour = vSCALE(obj.ambient_light, intersection.col);
-        P('colour 1', colour);
         var pi = vADD(ray.origin, vSCALE(intersection.t, ray.direction)); // the position of the intersection
 
         var light = self.scene.lights[0];
@@ -294,7 +290,7 @@ RayTracer.prototype.render = function() {
 
         // calculate diffuse shading
         L = vSUB(light.c, pi);
-        L = vNORM(L);
+        vNORM_IP(L);
         var V = ray.direction;
         var N = obj.get_norm(pi);
         var dotLN = vDOT(L, N);
@@ -303,7 +299,7 @@ RayTracer.prototype.render = function() {
             if (dotLN > 0) {
                 var diff = dotLN * obj.diff * shade;
                 // add diffuse component to ray color
-                colour = vADD(colour, vSCALE(diff, vPRODUCT(light.col, obj.col)));
+                vADD_IP(colour, vSCALE(diff, vPRODUCT(light.col, obj.col)));
             }
         }
 
@@ -311,12 +307,13 @@ RayTracer.prototype.render = function() {
         if (obj.spec > 0) {
             // point light source: sample once for specular highlight
 
-            var R = vSUB(L, vSCALE(2 * dotLN, N));
+            var R = L;  // NOTE: don't use L after this;
+            vSUB_IP(R, vSCALE(2 * dotLN, N));
             var dotVR = vDOT(V, R);
             if (dotVR > 0) {
                 var spec = Math.pow(dotVR, 20) * obj.spec * shade;
                 // add specular component to ray color
-                colour = vADD(colour, vSCALE(spec, light.col));
+                vADD_IP(colour, vSCALE(spec, light.col));
             }
         }
 
@@ -326,7 +323,9 @@ RayTracer.prototype.render = function() {
             if (depth > 0) {
                 var newRay = new Ray(vADD(pi, vSCALE(EPSILON, R)), R);
                 var rcol = raytrace(depth - 1, newRay, source_i, COL_BACKGROUND, 1);
-                colour = vADD(colour, vSCALE(obj.rfl, vPRODUCT(rcol, obj.col)));
+                vPRODUCT_IP(rcol, obj.col);
+                vSCALE_IP(obj.rfl, rcol);
+                vADD_IP(colour, rcol);
             }
         }
 
@@ -334,14 +333,18 @@ RayTracer.prototype.render = function() {
         if (obj.rfr > 0) {
             var n = rindex / obj.rfr;
             var result = rindex === 1.0 ? 1 : -1;
-            var rN = vSCALE(result, N);
+            var rN = N;
+            vSCALE_IP(result, rN); // NOTE: Don't use N after this point
             var cosI = -dotVN;
             var cosT2 = 1 - n * n * (1.0 - cosI * cosI);
             if (cosT2 > 0) {
-                var T = vADD(vSCALE(n, ray.direction), vSCALE(n * cosI - Math.sqrt(cosT2), rN));
+                vSCALE_IP(n * cosI - Math.sqrt(cosT2), rN);
+                var T = ray.direction;  // NOTE: Don't use ray after this point
+                vSCALE_IP(n, T);
+                vADD_IP(T, rN);
                 var refrRay = new Ray(vADD(pi, vSCALE(EPSILON, T)), T);
                 var rfrCol = raytrace(depth - 1, refrRay, source_i, COL_BACKGROUND, obj.rfr);
-                colour = vADD(colour, rfrCol);
+                vADD_IP(colour, rfrCol);
             }
         }
 

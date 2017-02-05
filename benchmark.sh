@@ -10,7 +10,7 @@ BENCHMARK_NAME="$1"
 DIR="benchmarks/${BENCHMARK_NAME}"
 BENCH_CSV=${BENCHMARK_NAME}.csv
 
-NODE=node --harmony-simd
+NODE="node --harmony-simd"
 
 #
 # Run the benchmark

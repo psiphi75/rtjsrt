@@ -77,6 +77,11 @@ var vector = {
     max_val: function (max, v) {
         return [Math.min(v[0], max), Math.min(v[1], max), Math.min(v[2], max)];
     },
+    max_valInplace: function (max, v) {
+        v[0] = Math.min(v[0], max);
+        v[1] = Math.min(v[1], max);
+        v[2] = Math.min(v[2], max);
+    },
     normalise: function (v) {
         var s = 1 / vector.length(v);
         return [v[0] * s, v[1] * s, v[2] * s];

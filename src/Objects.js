@@ -116,7 +116,8 @@ Disc.prototype.intersect = function (ray) {
     if (t > 0.0) {
         // FIXME (algo): pi is a common calculation
         var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
-        var pi_sub_c = vector.length(vector.sub(pi, this.c));
+        vector.subInplace(pi, this.c);
+        var pi_sub_c = vector.length(pi);
         if (pi_sub_c < this.r) {
             if (Math.sin(vector.get(pi, 0) * 5.0) * Math.sin(vector.get(pi, 2) * 5.0) > 0.0) {
                 return {
