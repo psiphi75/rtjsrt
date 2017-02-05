@@ -22,103 +22,77 @@
  *********************************************************************/
 
 'use strict';
-/* global SIMD */
 
 /**
  * General vector object. Stores vector information and has vector operators.
  * @type {{make: make, dot: dot, scale: scale, add: add, sub: sub, length: length, max_val: max_val, normalise: normalise}}
  */
 
-const TYPE = SIMD.Float32x4;
-
-const GET = TYPE.extractLane;
-const MUL = TYPE.mul;
-const ADD = TYPE.add;
-const SUB = TYPE.sub;
-const SPLAT = TYPE.splat;
-const MIN = TYPE.min;
-
 var vector = {
     make: function (x, y, z) {
         if (typeof x === 'number') {
-            return TYPE(x, y, z, 0);
+            return [x, y, z];
         } else {
-            return TYPE(GET(x, 0), GET(x, 1), GET(x, 2), 0);
+            return [x[0], x[1], x[2]];
         }
     },
     dot: function (v, w) {
-        var m = MUL(v, w);
-        return GET(m, 0) + GET(m, 1) + GET(m, 2);
+        return v[0] * w[0] + v[1] * w[1] + v[2] * w[2];
     },
     scale: function (f, v) {
-        return MUL(SPLAT(f), v);
+        return [v[0] * f, v[1] * f, v[2] * f];
+    },
+    scaleInplace: function(f, v) {
+        v[0] *= f;
+        v[1] *= f;
+        v[2] *= f;
     },
     add: function (v, w) {
-        return ADD(v, w);
+        return [v[0] + w[0], v[1] + w[1], v[2] + w[2]];
+    },
+    addInplace: function(v, w) {
+        v[0] += w[0];
+        v[1] += w[1];
+        v[2] += w[2];
     },
     sub: function (v, w) {
-        return SUB(v, w);
+        return [v[0] - w[0], v[1] - w[1], v[2] - w[2]];
+    },
+    subInplace: function(v, w) {
+        v[0] -= w[0];
+        v[1] -= w[1];
+        v[2] -= w[2];
     },
     product: function (v, w) {
-        return MUL(v, w);
+        return [v[0] * w[0], v[1] * w[1], v[2] * w[2]];
+    },
+    productInplace: function(v, w) {
+        v[0] *= w[0];
+        v[1] *= w[1];
+        v[2] *= w[2];
     },
     length: function (v) {
-        return Math.sqrt(vector.dot(v, v));
+        return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     },
     max_val: function (max, v) {
-        return MIN(SPLAT(max), v);
+        return [Math.min(v[0], max), Math.min(v[1], max), Math.min(v[2], max)];
     },
     normalise: function (v) {
         var s = 1 / vector.length(v);
-        return MUL(SPLAT(s), v);
+        return [v[0] * s, v[1] * s, v[2] * s];
+    },
+    normaliseInplace: function(v) {
+        var s = 1 / vector.length(v);
+        v[0] *= s;
+        v[1] *= s;
+        v[2] *= s;
     },
     get: function(v, i) {
-        return GET(v, i);
+        return v[i];
     },
     set: function(v, i, val) {
-        TYPE.replaceLane(v, i, val);
+        v[i] = val;
     }
 };
-
-// var vector = {
-//     make: function (x, y, z) {
-//         if (typeof x === 'number') {
-//             return [x, y, z];
-//         } else {
-//             return [x[0], x[1], x[2]];
-//         }
-//     },
-//     dot: function (v, w) {
-//         return v[0] * w[0] + v[1] * w[1] + v[2] * w[2];
-//     },
-//     scale: function (f, v) {
-//         return [v[0] * f, v[1] * f, v[2] * f];
-//     },
-//     add: function (v, w) {
-//         return [v[0] + w[0], v[1] + w[1], v[2] + w[2]];
-//     },
-//     sub: function (v, w) {
-//         return [v[0] - w[0], v[1] - w[1], v[2] - w[2]];
-//     },
-//     product: function (v, w) {
-//         return [v[0] * w[0], v[1] * w[1], v[2] * w[2]];
-//     },
-//     length: function (v) {
-//         return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-//     },
-//     max_val: function (max, v) {
-//         return [Math.min(v[0], max), Math.min(v[1], max), Math.min(v[2], max)];
-//     },
-//     normalise: function (v) {
-//         var s = vector.length(v);
-//         return [v[0] / s, v[1] / s, v[2] / s];
-//     },
-//     get: function(v, i) {
-//         return v[i];
-//     },
-//     set: function(v, i, val) {
-//         v[i] = val;
-//     }
-// };
 
 module.exports = vector;

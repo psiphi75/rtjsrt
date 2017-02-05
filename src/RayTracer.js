@@ -200,8 +200,8 @@ RayTracer.prototype.render = function() {
 
             var firstRay = new Ray(origin, vNORM(direction));
             var pixel_col = raytrace(self.depth, firstRay, -1, COL_BACKGROUND, 1);
-            if (row === 400 && col === 233) TRACE = true; else TRACE = false;
-            if (TRACE) console.log('Tracing')
+            // if (row === 400 && col === 233) TRACE = true; else TRACE = false;
+            // if (TRACE) console.log('Tracing')
             // limit the colour - extreme intensities become white
             pixel_col = vSCALE(255, pixel_col);
             pixel_col = vMAXVAL(255, pixel_col);
