@@ -47,6 +47,8 @@ function Sphere(center_v) {
     this.spec = 0.0;        // the specular amount -> 0.0 to 1.0
     this.diff = 0.0;
     this.d = new Vector(0, 0, 0);  // like .n above.
+    this.canCreateShadow = true;
+    this.canReceiveShadow = true;
     this.type = 'sphere';
 }
 Sphere.prototype.intersect = function (ray) {
@@ -101,6 +103,8 @@ function Disc(center_v, norm_v) {
     this.spec = 0.0;        // specular intensity
     this.diff = 0.0;        // diffuse intensity
     this.d = this.c.dot(this.n);    // solve plane equation for d
+    this.canCreateShadow = true;
+    this.canReceiveShadow = true;
     this.type = 'disc';
 }
 /**

@@ -45,3 +45,7 @@ SQUARE_SIZE = 12 => 219/min
 SQUARE_SIZE = 8 => 227/min
 SQUARE_SIZE = 6 => 232/min
 SQUARE_SIZE = 4 => 213/min
+
+# 13 - set canReceiveShadow and canCreateShadow
+
+Reduces shadow calculations

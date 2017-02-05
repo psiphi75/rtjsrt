@@ -106,6 +106,8 @@ function RayTracer(cols, rows, grid, do_physics) {
         disc.rfr = 0; // Refractivity
         disc.ambient_light = 0.6;
         disc.set_diffuse(0.2);
+        disc.canCreateShadow = false;
+        disc.canReceiveShadow = true;
         self.scene.add_object(disc);
 
         // Add a sphere
@@ -117,6 +119,8 @@ function RayTracer(cols, rows, grid, do_physics) {
         sph.rfr = 0; // Refractivity
         sph.ambient_light = 0.2;
         sph.set_diffuse(0.2);
+        sph.canCreateShadow = true;
+        sph.canReceiveShadow = false;
         self.scene.add_object(sph);
         self.physics.add_object(sph);
 
@@ -129,6 +133,8 @@ function RayTracer(cols, rows, grid, do_physics) {
         sph2.rfr = 0; // Refractivity
         sph2.ambient_light = 0.2;
         sph2.set_diffuse(0.7);
+        sph2.canCreateShadow = true;
+        sph2.canReceiveShadow = false;
         self.scene.add_object(sph2);
         self.physics.add_object(sph2);
 
@@ -141,6 +147,8 @@ function RayTracer(cols, rows, grid, do_physics) {
         sph3.rfr = 1.12; // Refractivity
         sph3.ambient_light = 0.05;
         sph3.set_diffuse(0);
+        sph3.canCreateShadow = true;
+        sph3.canReceiveShadow = false;
         self.scene.add_object(sph3);
         self.physics.add_object(sph3);
 
@@ -202,9 +210,11 @@ RayTracer.prototype.render = function() {
     }
 
     // The main loop
-    self.preCalcs.forEach(function(strip) {
+    // self.preCalcs.forEach(function(strip) {
+    for (let i = 0; i < self.preCalcs.length; i++) {
+        let strip = self.preCalcs[i];
         raytraceStrip(strip);
-        for (var sPnt = 0; sPnt < strip.length; sPnt++) {
+        for (let sPnt = 0; sPnt < strip.length; sPnt++) {
             var point = strip[sPnt];
             var pixel_col = point.pixel_col;
 
@@ -214,7 +224,7 @@ RayTracer.prototype.render = function() {
             self.grid[canvasPnt + 1] = pixel_col.y * 255;
             self.grid[canvasPnt + 2] = pixel_col.z * 255;
         }
-    });
+    }
 
     function raytraceStrip(strip) {
 
@@ -331,11 +341,12 @@ RayTracer.prototype.render = function() {
         var r = new Ray(pi.add(L.scale(EPSILON)), L);
         for (var i = 0; i < self.scene.objs.length; i++) {
 
-            // FIXME (algo): Add "canCreateShadow" here for each object
-
             // Don't intersect with self...
             // ... and check if an object is in the way of the light source
-            if (source_i !== i && self.scene.objs[i].intersect(r)) {
+            if (source_i !== i
+                && self.scene.objs[source_i].canReceiveShadow
+                && self.scene.objs[i].canCreateShadow
+                && self.scene.objs[i].intersect(r)) {
                 shade = 0;
                 break;
             }
