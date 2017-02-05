@@ -54,9 +54,9 @@ Sphere.prototype.intersect = function (ray) {
     //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
     //C=px*px + py*py + pz*pz - 2 * (px
 
-    var A = ray.dotDD;
-    var B = 2.0 * (ray.dotDO - ray.direction.dot(this.c));
-    var C = ray.dotOO - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
+    var A = ray.direction.dot(ray.direction);
+    var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(this.c));
+    var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
     var D = B * B - 4.0 * A * C;
     if (D > 0.0) {
         var sqrtD = Math.sqrt(D);

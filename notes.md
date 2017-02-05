@@ -55,3 +55,7 @@ Reduces shadow calculations
 # 14 - RayTrace from bottom up
 
 => 238/min
+
+# 15 - Precalc some of the ray math
+
+=> 229/min

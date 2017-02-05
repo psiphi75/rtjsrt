@@ -68,9 +68,6 @@ var EPSILON = constants.EPSILON;
 function Ray(origin, direction) {
     this.origin = origin;
     this.direction = direction;
-    this.dotDD = direction.dot(direction);
-    this.dotDO = direction.dot(origin);
-    this.dotOO = origin.dot(origin);
 }
 
 
@@ -290,7 +287,7 @@ RayTracer.prototype.render = function() {
      * @param {number} depth     How many iterations left
      * @param {Ray} ray          The ray
      * @param {number} source_i  The ID of the object the ray comes from
-     * @returns {vector}         An RGB colour
+     * @returns {Vector}         An RGB colour
      */
     function raytrace(depth, ray, source_i, colour, rindex) {
 
@@ -298,29 +295,26 @@ RayTracer.prototype.render = function() {
             return colour;
         }
 
-        var closestObj;
-        var closestObjT = Infinity;
+        var closestObjId = -1;
+        var closestInt;
         for (var i = 0; i < self.scene.objs.length; i++) {
             // Don't intersect object with itself
             if (i !== source_i) {
                 var obj = self.scene.objs[i];
                 var intersection = obj.intersect(ray);
-                if (intersection) {
-                    if (intersection.t < closestObjT) {
-                        closestObjT = intersection.t;
-                        closestObj = {
-                            i: i,
-                            intersection: intersection,
-                            obj: obj
-                        };
+                if (intersection !== undefined) {
+                    if (closestObjId === -1 || intersection.t < closestInt.t) {
+                        closestInt = intersection;
+                        closestObjId = i;
                     }
                 }
             }
         }
 
         // If we found an object, get the shade for the object.  Otherwise return the background
-        if (closestObj) {
-            return getShadeAtPoint(depth, ray, closestObj.i, closestObj.intersection, closestObj.obj, rindex);
+        if (closestObjId >= 0) {
+            obj = self.scene.objs[closestObjId];
+            return getShadeAtPoint(depth, ray, closestObjId, closestInt, obj, rindex);
         } else {
             return colour;
         }
