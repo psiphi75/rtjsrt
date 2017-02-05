@@ -14,4 +14,6 @@ Changed vector from [] to new Array (x4 slower!!!)
 
 It's going be slow for some time, read: https://groups.google.com/a/chromium.org/forum/#!topic/chromium-discuss/VEbF2KEmV-I
 
-# 06 - Change vector to not create a new vector
+# 06 - Enhanced vector math to re-use objects
+
+# 07 - Use const and let
