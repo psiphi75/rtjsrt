@@ -26,3 +26,22 @@ I was expecting a 20 to 30% boost here.  Not a slow down.
 
 If the corners of the square are black, then we just fill in the square.  The funny
 this is that this actually went slower.  Need to look at the profiler.
+
+# 11 - Changed vector object pattern
+
+Significant performance improvement.  The Vetor.dot function has gone from around 19% to 1.6%.
+
+# 12 - Cache some the rays that have already been rendered
+
+Before Caching:
+SQUARE_SIZE = 12 => 212/min
+SQUARE_SIZE = 8 => 224/min
+SQUARE_SIZE = 6 => 214/min
+SQUARE_SIZE = 4 => 177/min
+
+After Caching:
+SQUARE_SIZE = 24 => 216/min
+SQUARE_SIZE = 12 => 219/min
+SQUARE_SIZE = 8 => 227/min
+SQUARE_SIZE = 6 => 232/min
+SQUARE_SIZE = 4 => 213/min

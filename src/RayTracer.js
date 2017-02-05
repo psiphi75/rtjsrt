@@ -59,20 +59,6 @@ var COL_BACKGROUND = constants.COL_BACKGROUND;
 var GROUND_PLANE = constants.GROUND_PLANE;
 var EPSILON = constants.EPSILON;
 
-// var vADD = vector.add;
-// var vADD_IP = vector.addInplace;
-// var vPRODUCT = vector.product;
-// var vPRODUCT_IP = vector.productInplace;
-// var vSUB = vector.sub;
-// var vSUB_IP = vector.subInplace;
-// var vDOT = vector.dot;
-// var vNORM = vector.normalise;
-// var vNORM_IP = vector.normaliseInplace;
-// var vSCALE = vector.scale;
-// var vSCALE_IP = vector.scaleInplace;
-// var vLENGTH = vector.length;
-// var vSET = vector.set;
-
 /**
  * A ray that gets cast.
  * @param {vector} origin
@@ -218,8 +204,8 @@ RayTracer.prototype.render = function() {
     // The main loop
     self.preCalcs.forEach(function(strip) {
         raytraceStrip(strip);
-        strip.forEach(function(point) {
-
+        for (var sPnt = 0; sPnt < strip.length; sPnt++) {
+            var point = strip[sPnt];
             var pixel_col = point.pixel_col;
 
             /* Set the pixel_col value of the pixel */
@@ -227,32 +213,38 @@ RayTracer.prototype.render = function() {
             self.grid[canvasPnt] = pixel_col.x * 255;
             self.grid[canvasPnt + 1] = pixel_col.y * 255;
             self.grid[canvasPnt + 2] = pixel_col.z * 255;
-
-        });
+        }
     });
 
     function raytraceStrip(strip) {
 
         function setRaytrace(s) {
+
+            // Don't need to calculate those that have already be calculated
+            if (s === sPntTL) return pixel_colTL;
+            if (s === sPntTR) return pixel_colTR;
+            if (s === sPntBL) return pixel_colBL;
+            if (s === sPntBR) return pixel_colBR;
             return raytrace(self.depth, strip[s].firstRay, -1, COL_BACKGROUND, 1);
         }
 
         function setBlack() { return constants.COL_BLACK; }
 
-        var sPntTopLeft = 0;
-        var sPntTopRight = constants.SQUARE_SIZE - 1;
-        var sPntBottomLeft = (constants.SQUARE_SIZE - 1) * self.cols;
-        var sPntBottomRight = sPntBottomLeft + constants.SQUARE_SIZE - 1;
+        // TopLeft (TL), TopRight (TR), ...
+        var sPntTL = 0;
+        var sPntTR = constants.SQUARE_SIZE - 1;
+        var sPntBL = (constants.SQUARE_SIZE - 1) * self.cols;
+        var sPntBR = sPntBL + constants.SQUARE_SIZE - 1;
 
         // For Each Square
-        for (; sPntTopLeft < self.cols; ) {
+        for (; sPntTL < self.cols; ) {
 
-            var pixel_colTL = raytrace(self.depth, strip[sPntTopLeft].firstRay, -1, COL_BACKGROUND, 1);
-            var pixel_colTR = raytrace(self.depth, strip[sPntTopRight].firstRay, -1, COL_BACKGROUND, 1);
-            var pixel_colBL = raytrace(self.depth, strip[sPntBottomLeft].firstRay, -1, COL_BACKGROUND, 1);
-            var pixel_colBR = raytrace(self.depth, strip[sPntBottomRight].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colTL = raytrace(self.depth, strip[sPntTL].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colTR = raytrace(self.depth, strip[sPntTR].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colBL = raytrace(self.depth, strip[sPntBL].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colBR = raytrace(self.depth, strip[sPntBR].firstRay, -1, COL_BACKGROUND, 1);
 
-            var sPnt = sPntTopLeft;
+            var sPnt = sPntTL;
 
             // Check to see if we can fill the square with black
             var pixSum = pixel_colTL.add(pixel_colTR).add(pixel_colBL).add(pixel_colBR);
@@ -272,10 +264,10 @@ RayTracer.prototype.render = function() {
                 sPnt += self.cols - constants.SQUARE_SIZE;
             }
 
-            sPntTopLeft += constants.SQUARE_SIZE;
-            sPntTopRight += constants.SQUARE_SIZE;
-            sPntBottomLeft += constants.SQUARE_SIZE;
-            sPntBottomRight += constants.SQUARE_SIZE;
+            sPntTL += constants.SQUARE_SIZE;
+            sPntTR += constants.SQUARE_SIZE;
+            sPntBL += constants.SQUARE_SIZE;
+            sPntBR += constants.SQUARE_SIZE;
 
         }
     }

@@ -35,7 +35,7 @@ const constants = {
     HEIGHT: 696,
 
     // How big a grid size to use for checking contents (in pixels)
-    SQUARE_SIZE: 12,
+    SQUARE_SIZE: 6,
 
     // Named Colours
     COL_BLACK: new Vector(0, 0, 0),
