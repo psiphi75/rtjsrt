@@ -23,7 +23,7 @@
 
 'use strict';
 
-const vector = require('./vector');
+const Vector = require('./Vector');
 
 const constants = {
 
@@ -38,20 +38,20 @@ const constants = {
     SQUARE_SIZE: 12,
 
     // Named Colours
-    COL_BLACK: vector.make(0, 0, 0),
-    COL_WHITE: vector.make(1, 1, 1),
-    COL_RED: vector.make(1, 0, 0),
-    COL_GREEN: vector.make(0, 1, 0),
-    COL_BLUE: vector.make(0.6, 1, 1),
-    COL_SILVER: vector.make(0.85, 0.85, 0.85),
+    COL_BLACK: new Vector(0, 0, 0),
+    COL_WHITE: new Vector(1, 1, 1),
+    COL_RED: new Vector(1, 0, 0),
+    COL_GREEN: new Vector(0, 1, 0),
+    COL_BLUE: new Vector(0.6, 1, 1),
+    COL_SILVER: new Vector(0.85, 0.85, 0.85),
 
     // Colours of objects/scene
-    COL_SQUARE_1: vector.make(0, 0, 0),
-    COL_SQUARE_2: vector.make(0, 0.5, 0),
-    COL_BACKGROUND: vector.make(0, 0, 0),
+    COL_SQUARE_1: new Vector(0, 0, 0),
+    COL_SQUARE_2: new Vector(0, 0.5, 0),
+    COL_BACKGROUND: new Vector(0, 0, 0),
 
     // Where the ground plane sits
-    GROUND_PLANE: vector.make(0, 0, 0)
+    GROUND_PLANE: new Vector(0, 0, 0)
 };
 
 if (constants.WIDTH % constants.SQUARE_SIZE) console.error('WIDTH must be a factor of SQUARE_SIZE');

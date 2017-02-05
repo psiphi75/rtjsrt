@@ -23,7 +23,7 @@
 
 'use strict';
 
-var vector = require('./vector');
+var Vector = require('./Vector');
 
 
 /**
@@ -34,14 +34,14 @@ var vector = require('./vector');
  */
 function Physics(ground_v, options) {
     this.obj_list = [];
-    this.gravity = vector.make(0.0, -0.00981, 0.0);
+    this.gravity = new Vector(0.0, -0.00981, 0.0);
     this.ground_vector = ground_v;
     this.options = options;
 }
 
 Physics.prototype.add_object = function (obj) {
     this.obj_list[this.obj_list.length] = obj;
-    obj.velocity = vector.make(0, 0, 0);
+    obj.velocity = new Vector(0, 0, 0);
 };
 
 Physics.prototype.apply_forces = function () {
@@ -53,10 +53,10 @@ Physics.prototype.apply_forces = function () {
         var sin_t = Math.sin(angle);
         var cos_t = Math.cos(angle);
 
-        var x = vector.get(p, 0);
-        var z = vector.get(p, 2);
-        vector.set(p, 0, x * cos_t - z * sin_t);
-        vector.set(p, 2, z * cos_t + x * sin_t);
+        var x = p.x;
+        var z = p.z;
+        p.x = x * cos_t - z * sin_t;
+        p.z = z * cos_t + x * sin_t;
     }
 };
 

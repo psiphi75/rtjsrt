@@ -23,7 +23,7 @@
 
 'use strict';
 
-var vector = require('./vector');
+var Vector = require('./Vector');
 var constants = require('./Constants');
 
 var COL_WHITE = constants.COL_WHITE;
@@ -33,20 +33,20 @@ var COL_SQUARE_2 = constants.COL_SQUARE_2;
 
 /**
  * Make a sphere.
- * @param {vector} center_v    the center point of the Sphere
+ * @param {Vector} center_v    the center point of the Sphere
  * @constructor
  */
 function Sphere(center_v) {
-    this.c = center_v;      // Center position vector
+    this.c = center_v;      // Center position Vector
 
     // TODO: Test this hypothosis
-    this.n = vector.make(0, 0, 0); // only, for speed purposes, Chrome V8 likes objects with same parameter setup.
+    this.n = new Vector(0, 0, 0); // only, for speed purposes, Chrome V8 likes objects with same parameter setup.
     this.r = 1.0;           // Radius
     this.col = COL_WHITE;   // Colour of sphere
     this.rf = 0.0;          // Reflectivity -> 0.0 to 1.0
     this.spec = 0.0;        // the specular amount -> 0.0 to 1.0
     this.diff = 0.0;
-    this.d = vector.make(0, 0, 0);  // like .n above.
+    this.d = new Vector(0, 0, 0);  // like .n above.
     this.type = 'sphere';
 }
 Sphere.prototype.intersect = function (ray) {
@@ -56,9 +56,9 @@ Sphere.prototype.intersect = function (ray) {
     //C=px*px + py*py + pz*pz - 2 * (px
 
     // FIXME (algo): Some of these ray dot products are done multiple times for the same ray
-    var A = vector.dot(ray.direction, ray.direction);
-    var B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
-    var C = vector.dot(ray.origin, ray.origin) - 2.0 * vector.dot(ray.origin, this.c) + vector.dot(this.c, this.c) - this.r * this.r;
+    var A = ray.direction.dot(ray.direction);
+    var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(this.c));
+    var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
     var D = B * B - 4.0 * A * C;
     if (D > 0.0) {
         var sqrtD = Math.sqrt(D);
@@ -75,11 +75,11 @@ Sphere.prototype.intersect = function (ray) {
 };
 /**
  * Get the normal at point p.
- * @param {vector} p  The point to get the normal at.
- * @returns {vector}  The normal vector.
+ * @param {Vector} p  The point to get the normal at.
+ * @returns {Vector}  The normal Vector.
  */
 Sphere.prototype.get_norm = function (p) {
-    return vector.sub(p, this.c);
+    return p.sub(this.c);
 };
 Sphere.prototype.set_diffuse = function (diff) {
     this.diff = diff;
@@ -88,37 +88,37 @@ Sphere.prototype.set_diffuse = function (diff) {
 
 /**
  * Make a disc. This is just a circle on a plane.
- * @param {vector} center_v  the center of the disc.
- * @param {vector} norm_v    the normal of the disc.
+ * @param {Vector} center_v  the center of the disc.
+ * @param {Vector} norm_v    the normal of the disc.
  */
 function Disc(center_v, norm_v) {
     // Plane equation is a*x + b*y + c*z = d.
     this.c = center_v;      // center of disc
-    this.n = vector.normalise(norm_v);        // normal vector
+    this.n = norm_v.normalise();        // normal Vector
     this.r = 1.0;           // radius
     this.col = COL_WHITE;
     this.rf = 0.0;          // Reflectivity -> 0.0 to 1.0.
     this.spec = 0.0;        // specular intensity
     this.diff = 0.0;        // diffuse intensity
-    this.d = vector.dot(this.c, this.n);    // solve plane equation for d
+    this.d = this.c.dot(this.n);    // solve plane equation for d
     this.type = 'disc';
 }
 /**
- * Intersection with a disc from a ray coming from [px, py, pz] with direction vector [vx, vy, vz].
+ * Intersection with a disc from a ray coming from [px, py, pz] with direction Vector [vx, vy, vz].
  * @param {Ray} ray    the incoming ray
  * @returns {object}      And array with {col, t}
  */
 Disc.prototype.intersect = function (ray) {
 
-    var d = vector.dot(this.n, ray.direction);
-    var t = (this.d - vector.dot(this.n, ray.origin)) / d;
+    var d = this.n.dot(ray.direction);
+    var t = (this.d - this.n.dot(ray.origin)) / d;
     if (t > 0.0) {
         // FIXME (algo): pi is a common calculation
-        var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
-        vector.subInplace(pi, this.c);
-        var pi_sub_c = vector.length(pi);
+        var pi = ray.origin.add(ray.direction.scale(t));
+        pi.subInplace(this.c);
+        var pi_sub_c = pi.length();
         if (pi_sub_c < this.r) {
-            if (Math.sin(vector.get(pi, 0) * 5.0) * Math.sin(vector.get(pi, 2) * 5.0) > 0.0) {
+            if (Math.sin(pi.x * 5.0) * Math.sin(pi.z * 5.0) > 0.0) {
                 return {
                     col: COL_SQUARE_1,
                     t: t
@@ -136,11 +136,11 @@ Disc.prototype.intersect = function (ray) {
     return undefined;
 };
 /**
- * Return a copy of the normal vector for this disc.
- * @returns {vector} the normal vector.
+ * Return a copy of the normal Vector for this disc.
+ * @returns {Vector} the normal Vector.
  */
 Disc.prototype.get_norm = function () {
-    return vector.copy(this.n);
+    return this.n.copy();
 };
 Disc.prototype.set_diffuse = function (diff) {
     this.diff = diff;
@@ -159,7 +159,7 @@ function Light(c, colour) {
 
 /**
  * Make an eye, the observer. There can only be one observer.
- * @param {vector} center
+ * @param {Vector} center
  * @param {number} width
  * @param {number} height
  * @param {number} depth
