@@ -7,7 +7,7 @@ if [ -z $1 ]; then
 fi
 
 BENCHMARK_NAME="$1"
-DIR="benchmarks/${BENCHMARK_NAME}/"
+DIR="benchmarks/${BENCHMARK_NAME}"
 BENCH_CSV=${BENCHMARK_NAME}.csv
 
 #

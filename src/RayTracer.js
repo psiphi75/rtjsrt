@@ -44,6 +44,7 @@
 
 // TODO: Break up shade() - allows better analysis
 
+// TODO (perf): use const/let
 // TODO (perf): Make array a typed array OR make vector a proper object
 // TODO (perf): See how ASM.js makes performance improvements
 
@@ -60,6 +61,7 @@ var COL_BACKGROUND = constants.COL_BACKGROUND;
 var GROUND_PLANE = constants.GROUND_PLANE;
 var EPSILON = constants.EPSILON;
 
+var vMAKE = vector.make;
 var vADD = vector.add;
 var vPRODUCT = vector.product;
 var vSUB = vector.sub;
@@ -67,6 +69,7 @@ var vDOT = vector.dot;
 var vNORM = vector.normalise;
 var vSCALE = vector.scale;
 var vLENGTH = vector.length;
+var vMAXVAL = vector.max_val;
 
 /**
  * A ray that gets cast.
@@ -101,13 +104,13 @@ function RayTracer(cols, rows, grid, do_physics) {
         });
 
         // Init the eye and scene
-        var eye = new Objects.Eye(vector.make(0.0, 2, -15.0), 0.75, 0.75, 2.0);
+        var eye = new Objects.Eye(vMAKE(0.0, 2, -15.0), 0.75, 0.75, 2.0);
         self.scene = new Objects.Scene(eye);
         self.scene.ambient_light = 0.3;
 
         // Add a disc
-        var disc_center = vector.make(0.0, 0.0, 0);
-        var disc_normal = vector.make(0.0, 1.0, 0.0);
+        var disc_center = vMAKE(0.0, 0.0, 0);
+        var disc_normal = vMAKE(0.0, 1.0, 0.0);
         var disc = new Objects.Disc(disc_center, disc_normal);
         disc.r = 6;
         disc.rfl = 0.7; // Reflectivity -> 0.0 to 1.0
@@ -117,10 +120,10 @@ function RayTracer(cols, rows, grid, do_physics) {
         self.scene.add_object(disc);
 
         // Add a sphere
-        var sph_center = vector.make(0.7, 1.2, 0.4);
+        var sph_center = vMAKE(0.7, 1.2, 0.4);
         var sph = new Objects.Sphere(sph_center);
         sph.r = 1.0; // Radius
-        sph.col = vector.make(constants.COL_RED); // Colour of sphere
+        sph.col = vMAKE(constants.COL_RED); // Colour of sphere
         sph.rfl = 0.9; // Reflectivity -> 0.0 to 1.0
         sph.rfr = 0; // Refractivity
         sph.ambient_light = 0.2;
@@ -129,10 +132,10 @@ function RayTracer(cols, rows, grid, do_physics) {
         self.physics.add_object(sph);
 
         // ... and another sphere
-        var sph2_center = vector.make(-1.5, 1.6, 0.4);
+        var sph2_center = vMAKE(-1.5, 1.6, 0.4);
         var sph2 = new Objects.Sphere(sph2_center);
         sph2.r = 0.8;
-        sph2.col = vector.make(constants.COL_WHITE);
+        sph2.col = vMAKE(constants.COL_WHITE);
         sph2.rfl = 0.6;
         sph2.rfr = 0; // Refractivity
         sph2.ambient_light = 0.2;
@@ -141,10 +144,10 @@ function RayTracer(cols, rows, grid, do_physics) {
         self.physics.add_object(sph2);
 
         // ... and another sphere
-        var sph3_center = vector.make(1.2, 0.8, -1.8);
+        var sph3_center = vMAKE(1.2, 0.8, -1.8);
         var sph3 = new Objects.Sphere(sph3_center);
         sph3.r = 0.8;
-        sph3.col = vector.make(constants.COL_WHITE);
+        sph3.col = vMAKE(constants.COL_WHITE);
         sph3.rfl = 0.4;
         sph3.rfr = 1.12; // Refractivity
         sph3.ambient_light = 0.05;
@@ -153,8 +156,8 @@ function RayTracer(cols, rows, grid, do_physics) {
         self.physics.add_object(sph3);
 
         // Add a light
-        var light_c = vector.make(5, 7.5, -2.0);
-        var light_col = vector.make(constants.COL_WHITE);
+        var light_c = vMAKE(5, 7.5, -2.0);
+        var light_col = vMAKE(constants.COL_WHITE);
         var light = new Objects.Light(light_c, light_col);
         self.scene.add_light(light);
     }
@@ -173,7 +176,7 @@ RayTracer.prototype.render = function() {
     // Start in the top left
     var xDirectionStart = -self.scene.eye.w / 2.0;
     var yDirectionStart = self.scene.eye.h / 2.0;
-    var direction = vector.make(xDirectionStart, yDirectionStart, self.scene.eye.d);
+    var direction = vMAKE(xDirectionStart, yDirectionStart, self.scene.eye.d);
     var origin = self.scene.eye.c;
     var dnx = self.scene.eye.w / (self.cols - 1.0);
     var dny = self.scene.eye.h / (self.rows - 1.0);
@@ -189,8 +192,8 @@ RayTracer.prototype.render = function() {
             var pixel_col = raytrace(self.depth, firstRay, -1, COL_BACKGROUND, 1);
 
             // limit the colour - extreme intensities become white
-            pixel_col = vector.scale(255, pixel_col);
-            pixel_col = vector.max_val(255, pixel_col);
+            pixel_col = vSCALE(255, pixel_col);
+            pixel_col = vMAXVAL(255, pixel_col);
 
             /* Set the pixel_col value of the pixel */
             self.grid[gridPnt] = Math.round(pixel_col[0]);
@@ -264,12 +267,12 @@ RayTracer.prototype.render = function() {
         L = vSCALE(1 / tdist, L);
         var r = new Ray(vADD(pi, vSCALE(EPSILON, L)), L);
         for (var i = 0; i < self.scene.objs.length; i++) {
-            // Don't intersect with self
-            if (source_i === i) continue;
-            // FIXME (perf): Add "canCreateShadow" here for each object
 
-            // check if an object is in the way of the light source
-            if (self.scene.objs[i].intersect(r, tdist)) {
+            // FIXME (algo): Add "canCreateShadow" here for each object
+
+            // Don't intersect with self...
+            // ... and check if an object is in the way of the light source
+            if (source_i !== i && self.scene.objs[i].intersect(r)) {
                 shade = 0;
                 break;
             }
@@ -278,9 +281,11 @@ RayTracer.prototype.render = function() {
         // calculate diffuse shading
         L = vSUB(light.c, pi);
         L = vNORM(L);
+        var V = ray.direction;
         var N = obj.get_norm(pi);
+        var dotLN = vDOT(L, N);
+        var dotVN = vDOT(ray.direction, N);
         if (obj.diff > 0) {
-            var dotLN = vDOT(L, N);
             if (dotLN > 0) {
                 var diff = dotLN * obj.diff * shade;
                 // add diffuse component to ray color
@@ -291,9 +296,8 @@ RayTracer.prototype.render = function() {
         // determine specular component
         if (obj.spec > 0) {
             // point light source: sample once for specular highlight
-            var V = ray.direction;
-            // FIXME (perf): use dotLN from above
-            var R = vSUB(L, vSCALE(2 * vDOT(L, N), N));
+
+            var R = vSUB(L, vSCALE(2 * dotLN, N));
             var dotVR = vDOT(V, R);
             if (dotVR > 0) {
                 var spec = Math.pow(dotVR, 20) * obj.spec * shade;
@@ -304,9 +308,7 @@ RayTracer.prototype.render = function() {
 
         // calculate reflection
         if (obj.rfl > 0) {
-            // FIXME (algo): Can calc "obj.get_norm( pi )" earlier on
-            N = obj.get_norm(pi);
-            R = vSUB(ray.direction, vSCALE(2 * vDOT(ray.direction, N), N));
+            R = vSUB(ray.direction, vSCALE(2 * dotVN, N));
             if (depth > 0) {
                 var newRay = new Ray(vADD(pi, vSCALE(EPSILON, R)), R);
                 var rcol = raytrace(depth - 1, newRay, source_i, COL_BACKGROUND, 1);
@@ -318,11 +320,11 @@ RayTracer.prototype.render = function() {
         if (obj.rfr > 0) {
             var n = rindex / obj.rfr;
             var result = rindex === 1.0 ? 1 : -1;
-            N = vSCALE(result, obj.get_norm(pi));
-            var cosI = -vDOT(N, ray.direction);
+            var rN = vSCALE(result, N);
+            var cosI = -dotVN;
             var cosT2 = 1 - n * n * (1.0 - cosI * cosI);
             if (cosT2 > 0) {
-                var T = vADD(vSCALE(n, ray.direction), vSCALE(n * cosI - Math.sqrt(cosT2), N));
+                var T = vADD(vSCALE(n, ray.direction), vSCALE(n * cosI - Math.sqrt(cosT2), rN));
                 var refrRay = new Ray(vADD(pi, vSCALE(EPSILON, T)), T);
                 var rfrCol = raytrace(depth - 1, refrRay, source_i, COL_BACKGROUND, obj.rfr);
                 colour = vADD(colour, rfrCol);

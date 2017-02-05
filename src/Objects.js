@@ -55,6 +55,7 @@ Sphere.prototype.intersect = function (ray) {
     //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
     //C=px*px + py*py + pz*pz - 2 * (px
 
+    // FIXME (algo): Some of these ray dot products are done multiple times for the same ray
     // FIXME (perf): Reduce number of objects property lookups by making constants
     var A = vector.dot(ray.direction, ray.direction);
     var B = 2.0 * (vector.dot(ray.direction, ray.origin) - vector.dot(ray.direction, this.c));
@@ -113,6 +114,7 @@ Disc.prototype.intersect = function (ray) {
     var d = vector.dot(this.n, ray.direction);
     var t = (this.d - vector.dot(this.n, ray.origin)) / d;
     if (t > 0.0) {
+        // FIXME (algo): pi is a common calculation
         var pi = vector.add(ray.origin, vector.scale(t, ray.direction));
         var pi_sub_c = vector.length(vector.sub(pi, this.c));
         if (pi_sub_c < this.r) {
