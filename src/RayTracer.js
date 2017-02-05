@@ -176,20 +176,13 @@ function RayTracer(cols, rows, grid, do_physics) {
         var origin = self.scene.eye.c;
         var dnx = vMAKE(self.scene.eye.w / (self.cols - 1.0), 0, 0);
         var dny = vMAKE(0, self.scene.eye.h / (self.rows - 1.0), 0);
-        var gridPnt = 0;
 
-        self.preCalcs = [];
-
+        self.firstRayCalcs = [];
         for (var row = 0; row < self.rows; row++) {
-            self.preCalcs[row] = [];
             for (var col = 0; col < self.cols; col++) {
                 vADD_IP(direction, dnx);
                 var firstRay = new Ray(origin, vNORM(direction));
-                self.preCalcs[row].push({
-                    gridPnt: gridPnt,
-                    firstRay: firstRay
-                });
-                gridPnt += 4;
+                self.firstRayCalcs.push(firstRay);
             }
             vSET(direction, 0, xDirectionStart);
             vSUB_IP(direction, dny);
@@ -208,29 +201,28 @@ RayTracer.prototype.render = function() {
         self.physics.apply_forces();
     }
 
-    for (var row = 0; row < self.rows; row++) {
-        for (var col = 0; col < self.cols; col++) {
+    // The main loop
+    for (var pnt = 0; pnt < self.firstRayCalcs.length; pnt++) {
 
-            var pixel_col = raytrace(self.depth, self.preCalcs[row][col].firstRay, -1, COL_BACKGROUND, 1);
-            // if (row === 400 && col === 233) TRACE = true; else TRACE = false;
-            // if (TRACE) console.log('Tracing')
-            // limit the colour - extreme intensities become white
-            vSCALE_IP(255, pixel_col);
-            vMAXVAL_IP(255, pixel_col);
+        var pixel_col = raytrace(self.depth, self.firstRayCalcs[pnt], -1, COL_BACKGROUND, 1);
 
-            /* Set the pixel_col value of the pixel */
-            var gridPnt = self.preCalcs[row][col].gridPnt;
-            self.grid[gridPnt] = vGET(pixel_col, 0) & 255;
-            self.grid[gridPnt + 1] = vGET(pixel_col, 1) & 255;
-            self.grid[gridPnt + 2] = vGET(pixel_col, 2) & 255;
-
-        }
-
+        /* Set the pixel_col value of the pixel */
+        var canvasPnt = pnt * 4;
+        self.grid[canvasPnt] = pixel_col[0] * 255;
+        self.grid[canvasPnt + 1] = pixel_col[1] * 255;
+        self.grid[canvasPnt + 2] = pixel_col[2] * 255;
 
     }
 
-    // for (var rowStart = 0; rowStart < self.rows; rowStart++) {
+    // for (let rowStart = 0; rowStart < self.rows; rowStart += constants.SQUARE_SIZE) {
+    //     strip
     //     var strip = renderStrip(rowStart);
+    // }
+    //
+    // function renderStrip(rowStart) {
+    //     for (let colStart = 0; colStart < self.cols; colStart += constants.SQUARE_SIZE) {
+    //         var square = renderSquare(rowStart, colStart)
+    //     }
     // }
 
 
