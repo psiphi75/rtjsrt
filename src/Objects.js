@@ -63,7 +63,6 @@ Sphere.prototype.intersect = function (ray) {
             var t = (-B - sqrtD) / (2.0 * A);
             var pi = ray.origin.add(ray.direction.scale(t));
             return {
-                hit: true,
                 col: this.col,
                 t: t,
                 pi: pi
@@ -119,21 +118,19 @@ Disc.prototype.intersect = function (ray) {
         var pi = ray.origin.add(ray.direction.scale(t)).sub(this.c);
         var pi_sub_c = pi.length();
         if (pi_sub_c < this.r) {
-            if (Math.sin(pi.x * 5.0) * Math.sin(pi.z * 5.0) > 0.0) {
-                return {
-                    hit: true,
-                    col: COL_SQUARE_1,
-                    t: t,
-                    pi: pi
-                };
+            var col;
+            if ((Math.abs(pi.x + 100) & 255 % 2) ^ (Math.abs(pi.z + 100) & 255 % 2)) {
+                col = COL_SQUARE_1;
             } else {
-                return {
-                    hit: true,
-                    col: COL_SQUARE_2,
-                    t: t,
-                    pi: pi
-                };
+                col = COL_SQUARE_2;
             }
+
+            return {
+                col: col,
+                t: t,
+                pi: pi
+            };
+
         }
     }
 

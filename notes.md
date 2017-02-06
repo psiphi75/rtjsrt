@@ -82,4 +82,8 @@ intersect       782,      3622240
 
 # 19 - Changed Intersection back and to return null
 
-=> 255/min 
+=> 250/min
+
+# 20 - Removed Math.sin function
+
+=> 272/min
