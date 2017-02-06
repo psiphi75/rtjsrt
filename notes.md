@@ -75,3 +75,11 @@ intersect       782,      3622240
 # 17 - Tried forEach loop on native Array
 
 => 171/min
+
+# 18 - Changed Intersection to Object
+
+=> 225/min
+
+# 19 - Changed Intersection back and to return null
+
+=> 255/min 

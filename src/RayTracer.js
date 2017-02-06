@@ -317,7 +317,7 @@ RayTracer.prototype.render = function() {
                 var intersection = obj.intersect(ray);
                 // self.timers.intersect.stop();
                 // self.timers.raytrace.resume();
-                if (intersection.hit) {
+                if (intersection !== null) {
                     if (closestObjId === -1 || intersection.t < closestInt.t) {
                         closestInt = intersection;
                         closestObjId = i;
@@ -366,7 +366,7 @@ RayTracer.prototype.render = function() {
             if (source_i !== i
                 && objs[source_i].canReceiveShadow
                 && objs[i].canCreateShadow
-                && objs[i].intersect(r).hit) {
+                && objs[i].intersect(r) !== null) {
                     // self.timers.intersect.stop();
                     // self.timers.getShadeAtPoint.resume();
                 shade = 0;
