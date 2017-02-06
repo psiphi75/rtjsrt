@@ -42,6 +42,6 @@ self.addEventListener('message', function(e) {
         default:
             var stripID = parseInt(msg);
             var data = rt.render(stripID);
-            self.postMessage(data);
+            self.postMessage(data, [data]);
     }
 }, false);

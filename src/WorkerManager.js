@@ -41,7 +41,7 @@ WorkerManager.prototype.addWorkToQueue = function (messages, intermediateCallbac
     var work = messages.map(function(message) {
         return function(asyncDoneCallback) {
             self.assignWorker(message, function(err, result) {
-                intermediateCallback(null, result);
+                intermediateCallback(null, result, message);
                 asyncDoneCallback(null, null);
             });
         };

@@ -44,16 +44,13 @@ ManageRayTracing.prototype.renderFrame = function(callback) {
     var self = this;
     this.workerManager.addWorkToQueue(this.stripIDs, applyData, callback);
 
-    function applyData(err, rtData) {
-        for (let i = 0; i < rtData.data.length; i++) {
-            var point = rtData.data[i];
-            var pixel_col = point.pixel_col;
+    function applyData(err, rtData, stripID) {
 
-            /* Set the pixel_col value of the pixel */
-            var canvasPnt = point.pnt * 4;
-            self.grid[canvasPnt] = pixel_col.x * 255;
-            self.grid[canvasPnt + 1] = pixel_col.y * 255;
-            self.grid[canvasPnt + 2] = pixel_col.z * 255;
+        var startPnt = stripID * rtData.data.byteLength;
+        var endPnt = startPnt + rtData.data.byteLength - 1;
+        var grid = new Uint8ClampedArray(rtData.data);
+        for (let i = 0, pnt = startPnt; pnt < endPnt; pnt++, i++) {
+            self.grid[pnt] = grid[i];
         }
     }
 

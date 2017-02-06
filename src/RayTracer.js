@@ -209,10 +209,11 @@ RayTracer.prototype.render = function(stripID) {
 
     var self = this;
     var objs = self.scene.objs;
+    var result = new Uint8ClampedArray(self.strips[stripID].length * 4);
 
     // The "main loop"
     raytraceStrip(self.strips[stripID]);
-    return self.strips[stripID];
+    return result.buffer;
 
     // self.timers.getShadeAtPoint.stop();
     // console.log('raytrace', self.timers.raytrace.totalTime(), self.timers.raytrace.getCounter());
@@ -263,7 +264,14 @@ RayTracer.prototype.render = function(stripID) {
             // Fill the square with colour (or black)
             for (let r = 0; r < constants.SQUARE_SIZE; r++) {
                 for (let c = 0; c < constants.SQUARE_SIZE; c++) {
-                    strip[sPnt].pixel_col = fn(sPnt);
+                    var col = fn(sPnt);
+                    col.scaleInplace(255);
+                    col.maxValInplace(255);
+
+                    result[sPnt * 4] = col.x;
+                    result[sPnt * 4 + 1] = col.y;
+                    result[sPnt * 4 + 2] = col.z;
+                    result[sPnt * 4 + 3] = 255;
                     sPnt++;
                 }
                 sPnt += self.cols - constants.SQUARE_SIZE;

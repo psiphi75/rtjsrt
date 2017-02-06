@@ -102,3 +102,18 @@ I thought this would speed things up.
 => 255/min
 
 # 24 - Threads
+
+Bad performance due to array copying
+
+=> 23.4/min (measured in browser)
+
+# 25 - Threads with better array copying
+
+=> 226/min (1 thread, measured in browser)
+=> 437/min (2 threads, measured in browser)
+=> 567/min (3 threads, measured in browser)
+=> 640/min (4 threads, measured in browser)
+=> 756/min (5 threads, measured in browser)
+=> 792/min (6 threads, measured in browser)
+=> 786/min (7 threads, measured in browser)
+=> 780/min (8 threads, measured in browser)

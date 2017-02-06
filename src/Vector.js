@@ -177,4 +177,14 @@ Vector.prototype.sumElements = function () {
     return this.x + this.y + this.z;
 };
 
+/**
+ * limit the values in placc
+ * @return {number}
+ */
+Vector.prototype.maxValInplace = function(max) {
+    this.x = Math.min(this.x, max);
+    this.y = Math.min(this.y, max);
+    this.z = Math.min(this.z, max);
+};
+
 module.exports = Vector;

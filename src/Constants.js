@@ -27,7 +27,7 @@ const Vector = require('./Vector');
 
 const constants = {
 
-    NUM_WORKERS: 2,
+    NUM_WORKERS: 3,
 
     // Used to make sure we are on the near side of point of intersection
     EPSILON: 0.00001,
