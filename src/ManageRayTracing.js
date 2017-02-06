@@ -1,6 +1,6 @@
 /*********************************************************************
  *                                                                   *
- *   Copyright 2016 Simon M. Werner                                  *
+ *   Copyright 2017 Simon M. Werner                                  *
  *                                                                   *
  *   Licensed to the Apache Software Foundation (ASF) under one      *
  *   or more contributor license agreements.  See the NOTICE file    *
@@ -23,55 +23,40 @@
 
 'use strict';
 
-var animationIsRunning = true;
+var RayTracer = require('./RayTracer');
+var WorkerManager = require('./WorkerManager');
 
-// Let the page load.
-window.onload = function() {
+const WORKER_JS = 'www/RayTraceWorker.js';
 
-    // Attach runPause
-    document.getElementById('run_button').addEventListener('click', function runPause() {
-        animationIsRunning = !animationIsRunning;
-        if (animationIsRunning) {
-            generate();
+function ManageRayTracing(numWorkers, width, height, grid) {
+    var rt = new RayTracer(width, height);
+    var numStrips = rt.getNumStrips();
+
+    // Create an array ['0', '1', '2', ...]
+    this.stripIDs = [...Array(numStrips).keys()].map((i) => i.toFixed(0));
+
+    this.grid = grid;
+    this.workerManager = new WorkerManager(numWorkers, WORKER_JS);
+}
+
+ManageRayTracing.prototype.renderFrame = function(callback) {
+
+    var self = this;
+    this.workerManager.addWorkToQueue(this.stripIDs, applyData, callback);
+
+    function applyData(err, rtData) {
+        for (let i = 0; i < rtData.data.length; i++) {
+            var point = rtData.data[i];
+            var pixel_col = point.pixel_col;
+
+            /* Set the pixel_col value of the pixel */
+            var canvasPnt = point.pnt * 4;
+            self.grid[canvasPnt] = pixel_col.x * 255;
+            self.grid[canvasPnt + 1] = pixel_col.y * 255;
+            self.grid[canvasPnt + 2] = pixel_col.z * 255;
         }
-    }, false);
-
-    var constants = require('./src/Constants');
-    var ManageRayTracing = require('./src/ManageRayTracing');
-    var FPSTimer = require('./src/FPSTimer');
-    var timer = new FPSTimer();
-
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
-    context.canvas.height = constants.HEIGHT;
-    context.canvas.width = constants.WIDTH;
-    var image = context.getImageData(0, 0, constants.WIDTH, constants.HEIGHT);
-    var imageData = image.data;
-
-    // Set the colour to white
-    for (var p = 0; p < imageData.length; p += 4) {
-        imageData[p + 3] = 255;
-    }
-
-    var rt = new ManageRayTracing(constants.NUM_WORKERS, constants.WIDTH, constants.HEIGHT, imageData);
-    generate();
-
-    function generate() {
-
-        timer.start();
-        rt.renderFrame(done);
-
-        function done() {
-
-            var fps = timer.stop();
-
-            context.putImageData(image, 0, 0);
-
-            document.getElementById('fps').innerHTML = '<p>FPS: ' + fps.toFixed(1) + ' (' + timer.average().toFixed(2) + ')</p>';
-            if (animationIsRunning) setTimeout(generate, 0);
-
-        }
-
     }
 
 };
+
+module.exports = ManageRayTracing;

@@ -25,7 +25,7 @@
 
 var parallelLimit = require('async').parallelLimit;
 
-function WorkerManager(uri, numWorkers) {
+function WorkerManager(numWorkers, uri) {
     this.activeWorkers = [];
     this.idleWorkers = [];
     this.numWorkers = numWorkers;
@@ -40,34 +40,46 @@ WorkerManager.prototype.addWorkToQueue = function (messages, intermediateCallbac
     var self = this;
     var work = messages.map(function(message) {
         return function(asyncDoneCallback) {
-            self.assignWorker(message, function(result) {
+            self.assignWorker(message, function(err, result) {
                 intermediateCallback(null, result);
-                asyncDoneCallback(null);
+                asyncDoneCallback(null, null);
             });
         };
     });
-    parallelLimit(work, this.numWorkers, finalCallback);
+    parallelLimit(work, this.numWorkers, function() {
+        self.nextFrame();
+        finalCallback();
+    });
 };
 
 WorkerManager.prototype.assignWorker = function (message, callback) {
     if (this.idleWorkers.length === 0) throw new Error('WorkerManager.assignWorker: no more idle workers');
 
+    var self = this;
     var worker = this.idleWorkers.shift();
     this.activeWorkers.push(worker);
 
-    worker.addEventListener('message', waitForResult, false);
+    worker.addEventListener('message', waitForResult, { once: true });
     worker.postMessage(message);
 
     function waitForResult(data) {
 
         // Remove the active worker
-        var index = this.activeWorkers.indexOf(worker);
+        var index = self.activeWorkers.indexOf(worker);
         if (index > -1) {
-            this.activeWorkers.splice(index, 1);
+            self.activeWorkers.splice(index, 1);
         }
-        this.idleWorkers.push(worker);
+
+        self.idleWorkers.push(worker);
         callback(null, data);
     }
+};
+
+WorkerManager.prototype.nextFrame = function() {
+    if (this.activeWorkers.length > 0) throw new Error('There are active workers when there should be none.');
+    this.idleWorkers.forEach(function(worker) {
+        worker.postMessage('inc');
+    });
 };
 
 module.exports = WorkerManager;
