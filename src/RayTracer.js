@@ -212,6 +212,26 @@ RayTracer.prototype.render = function() {
     }
     var objs = self.scene.objs;
 
+    warm_up();
+    function warm_up() {
+        for (var i = 0; i < 500; i++) {
+
+            let rndStrip = Math.round(Math.random() * (self.preCalcs.length - 1));
+
+            let strip = self.preCalcs[rndStrip];
+            let sPnt = Math.round(Math.random() * (strip.length - 1));
+
+            let point = strip[sPnt];
+            let pixel_col = raytrace(self.depth, strip[sPnt].firstRay, -1, COL_BACKGROUND, 1);
+
+            /* Set the pixel_col value of the pixel */
+            let canvasPnt = point.pnt * 4;
+            self.grid[canvasPnt] = pixel_col.x * 255;
+            self.grid[canvasPnt + 1] = pixel_col.y * 255;
+            self.grid[canvasPnt + 2] = pixel_col.z * 255;
+        }
+    }
+
     // self.timers.getShadeAtPoint.start();
 
     // The main loop

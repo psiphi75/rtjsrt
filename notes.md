@@ -87,3 +87,10 @@ intersect       782,      3622240
 # 20 - Removed Math.sin function
 
 => 272/min
+
+# 21 - Scale then add in one operation
+
+I thought this would speed things up.
+=> 57 / min
+
+# 22 - Warm up the compiler
