@@ -27,26 +27,38 @@ var RayTracer = require('./RayTracer');
 var WorkerManager = require('./WorkerManager');
 
 function ManageRayTracing(numWorkers, width, height, grid) {
-    var rt = new RayTracer(width, height);
-    var numStrips = rt.getNumStrips();
-
-    // Create an array ['0', '1', '2', ...]
-    this.stripIDs = [...Array(numStrips).keys()].map((i) => i.toFixed(0));
-
+    this.rt = new RayTracer(width, height);
+    this.numStrips = this.rt.getNumStrips();
+    this.numWorkers = numWorkers;
     this.grid = grid;
-    this.workerManager = new WorkerManager(numWorkers);
+
+    if (this.numWorkers > 1) {
+        // Create an array ['0', '1', '2', ...]
+        this.stripIDs = [...Array(this.numStrips).keys()].map((i) => i.toFixed(0));
+        this.workerManager = new WorkerManager(numWorkers);
+    }
+
 }
 
 ManageRayTracing.prototype.renderFrame = function(callback) {
 
     var self = this;
-    this.workerManager.addWorkToQueue(this.stripIDs, applyData, callback);
+    if (this.numWorkers > 1) {
+        this.workerManager.addWorkToQueue(this.stripIDs, function(err, rtData, stripID) {
+            applyData(rtData.data, stripID);
+        }, callback);
+    } else {
+        for (let stripID = 0; stripID < this.numStrips; stripID++) {
+            applyData(this.rt.render(stripID), stripID);
+        }
+        this.rt.increment();
+        callback();
+    }
 
-    function applyData(err, rtData, stripID) {
-
-        var startPnt = stripID * rtData.data.byteLength;
-        var endPnt = startPnt + rtData.data.byteLength - 1;
-        var grid = new Uint8ClampedArray(rtData.data);
+    function applyData(gridBuf, stripID) {
+        let startPnt = stripID * gridBuf.byteLength;
+        let endPnt = startPnt + gridBuf.byteLength - 1;
+        let grid = new Uint8ClampedArray(gridBuf);
         for (let i = 0, pnt = startPnt; pnt < endPnt; pnt++, i++) {
             self.grid[pnt] = grid[i];
         }
@@ -55,7 +67,9 @@ ManageRayTracing.prototype.renderFrame = function(callback) {
 };
 
 ManageRayTracing.prototype.shutDown = function() {
-    this.workerManager.terminateAll();
+    if (this.numWorkers > 1) {
+        this.workerManager.terminateAll();
+    }
 };
 
 module.exports = ManageRayTracing;

@@ -68,7 +68,7 @@ var Ray = Objects.Ray;
 function RayTracer(cols, rows) {
     this.cols = cols;
     this.rows = rows;
-    this.depth = 9;
+    this.depth = constants.DEPTH;
     this.timers = {
         raytrace: new FPSTimer(),
         intersect: new FPSTimer(),
@@ -209,13 +209,11 @@ RayTracer.prototype.render = function(stripID) {
 
     var self = this;
     var objs = self.scene.objs;
-    var result = new Uint8ClampedArray(self.strips[stripID].length * 4);
+    var resultGrid = new Uint8ClampedArray(self.strips[stripID].length * 4);
 
     // The "main loop"
-    var count = 0
     raytraceStrip(self.strips[stripID]);
-    // console.log(stripID, result.length/4, count)
-    return result.buffer;
+    return resultGrid.buffer;
 
     // self.timers.getShadeAtPoint.stop();
     // console.log('raytrace', self.timers.raytrace.totalTime(), self.timers.raytrace.getCounter());
@@ -269,11 +267,11 @@ RayTracer.prototype.render = function(stripID) {
                     var col = fn(sPnt);
                     col.scaleInplace(255);
                     col.maxValInplace(255);
-                    if (col.x > 0)                    count++
-                    result[sPnt * 4] = col.x;
-                    result[sPnt * 4 + 1] = col.y;
-                    result[sPnt * 4 + 2] = col.z;
-                    result[sPnt * 4 + 3] = 255;
+
+                    resultGrid[sPnt * 4] = col.x;
+                    resultGrid[sPnt * 4 + 1] = col.y;
+                    resultGrid[sPnt * 4 + 2] = col.z;
+                    resultGrid[sPnt * 4 + 3] = 255;
                     sPnt++;
                 }
                 sPnt += self.cols - constants.SQUARE_SIZE;
@@ -359,31 +357,8 @@ RayTracer.prototype.render = function(stripID) {
         var light = self.scene.lights[0];
 
         // handle point light source -
-        var shade = 1;
         var L = light.c.sub(pi);
-        var tdist = L.length();
-        var Lt = L.scale(1 / tdist);
-        var r = new Ray(pi.add(Lt.scale(EPSILON)), Lt);
-        for (var i = 0; i < objs.length; i++) {
-
-            // Don't intersect with self...
-            // ... and check if an object is in the way of the light source
-
-            // self.timers.getShadeAtPoint.pause();
-            // self.timers.intersect.start();
-            // self.timers.intersect.count();
-            if (source_i !== i
-                && objs[source_i].canReceiveShadow
-                && objs[i].canCreateShadow
-                && objs[i].intersect(r) !== null) {
-                // self.timers.intersect.stop();
-                // self.timers.getShadeAtPoint.resume();
-                shade = 0;
-                break;
-            }
-            // self.timers.intersect.stop();
-            // self.timers.getShadeAtPoint.resume();
-        }
+        var shade = getShading(L, pi, source_i);
 
         // calculate diffuse shading
         L.normaliseInplace();
@@ -451,6 +426,32 @@ RayTracer.prototype.render = function(stripID) {
         // self.timers.getShadeAtPoint.pause();
         return colour;
 
+    }
+
+    function getShading(L, pi, source_i) {
+        var tdist = L.length();
+        var Lt = L.scale(1 / tdist);
+        var r = new Ray(pi.add(Lt.scale(EPSILON)), Lt);
+        for (var i = 0; i < objs.length; i++) {
+
+            // Don't intersect with self...
+            // ... and check if an object is in the way of the light source
+
+            // self.timers.getShadeAtPoint.pause();
+            // self.timers.intersect.start();
+            // self.timers.intersect.count();
+            if (source_i !== i
+                && objs[source_i].canReceiveShadow
+                && objs[i].canCreateShadow
+                && objs[i].intersect(r) !== null) {
+                // self.timers.intersect.stop();
+                // self.timers.getShadeAtPoint.resume();
+                return 0;
+            }
+            // self.timers.intersect.stop();
+            // self.timers.getShadeAtPoint.resume();
+        }
+        return 1;
     }
 
 };

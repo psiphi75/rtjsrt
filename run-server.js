@@ -48,10 +48,11 @@ function generate() {
 
     timer.start();
     rt.renderFrame(done);
-    const fps = timer.stop();
-    frames++;
 
     function done() {
+
+        const fps = timer.stop();
+        frames++;
 
         if (profiling && frames > 10) {
             profiler.startProfiling();
