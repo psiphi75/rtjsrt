@@ -117,3 +117,15 @@ Bad performance due to array copying
 => 792/min (6 threads, measured in browser)
 => 786/min (7 threads, measured in browser)
 => 780/min (8 threads, measured in browser)
+
+1 threads => 270/min
+2 threads => 501/min
+3 threads => 681/min
+4 threads => 855/min
+5 threads => 855/min
+6 threads => 872/min
+7 threads => 861/min
+8 threads => 940/min
+12 threads => 891/min
+16 threads => 879/min
+32 threads => 804/min

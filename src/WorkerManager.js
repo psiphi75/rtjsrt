@@ -24,14 +24,27 @@
 'use strict';
 
 var parallelLimit = require('async').parallelLimit;
+const isNodeJS = (typeof window === 'undefined');
 
-function WorkerManager(numWorkers, uri) {
+// Browswer already has worker defined
+var UniversalWorker;
+var uri;
+
+if (isNodeJS) {
+    UniversalWorker = require('workerjs');
+    uri = 'src/RayTraceWorker.js';
+} else {
+    UniversalWorker = Worker;
+    uri = 'www/RayTraceWorker.js';
+}
+
+function WorkerManager(numWorkers) {
     this.activeWorkers = [];
     this.idleWorkers = [];
     this.numWorkers = numWorkers;
 
     for (var i = 0; i < numWorkers; i++ ) {
-        var worker = new Worker(uri);
+        var worker = new UniversalWorker(uri);
         this.idleWorkers.push(worker);
     }
 }
@@ -80,6 +93,14 @@ WorkerManager.prototype.nextFrame = function() {
     this.idleWorkers.forEach(function(worker) {
         worker.postMessage('inc');
     });
+};
+
+WorkerManager.prototype.terminateAll = function() {
+    this.activeWorkers.concat(this.idleWorkers).forEach(function(worker) {
+        worker.terminate();
+    });
+    this.activeWorkers = [];
+    this.idleWorkers = [];
 };
 
 module.exports = WorkerManager;

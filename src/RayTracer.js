@@ -212,7 +212,9 @@ RayTracer.prototype.render = function(stripID) {
     var result = new Uint8ClampedArray(self.strips[stripID].length * 4);
 
     // The "main loop"
+    var count = 0
     raytraceStrip(self.strips[stripID]);
+    // console.log(stripID, result.length/4, count)
     return result.buffer;
 
     // self.timers.getShadeAtPoint.stop();
@@ -267,7 +269,7 @@ RayTracer.prototype.render = function(stripID) {
                     var col = fn(sPnt);
                     col.scaleInplace(255);
                     col.maxValInplace(255);
-
+                    if (col.x > 0)                    count++
                     result[sPnt * 4] = col.x;
                     result[sPnt * 4 + 1] = col.y;
                     result[sPnt * 4 + 2] = col.z;

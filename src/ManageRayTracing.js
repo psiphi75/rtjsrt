@@ -26,8 +26,6 @@
 var RayTracer = require('./RayTracer');
 var WorkerManager = require('./WorkerManager');
 
-const WORKER_JS = 'www/RayTraceWorker.js';
-
 function ManageRayTracing(numWorkers, width, height, grid) {
     var rt = new RayTracer(width, height);
     var numStrips = rt.getNumStrips();
@@ -36,7 +34,7 @@ function ManageRayTracing(numWorkers, width, height, grid) {
     this.stripIDs = [...Array(numStrips).keys()].map((i) => i.toFixed(0));
 
     this.grid = grid;
-    this.workerManager = new WorkerManager(numWorkers, WORKER_JS);
+    this.workerManager = new WorkerManager(numWorkers);
 }
 
 ManageRayTracing.prototype.renderFrame = function(callback) {
@@ -54,6 +52,10 @@ ManageRayTracing.prototype.renderFrame = function(callback) {
         }
     }
 
+};
+
+ManageRayTracing.prototype.shutDown = function() {
+    this.workerManager.terminateAll();
 };
 
 module.exports = ManageRayTracing;

@@ -23,10 +23,21 @@
 
 'use strict';
 
-var RayTracer = require('./RayTracer');
-var constants = require('./Constants');
-var rt = new RayTracer(constants.WIDTH, constants.HEIGHT);
+const isNodeJS = new Function('try {return this===global;}catch(e){return false;}')();
 
+var path = isNodeJS ?  __dirname + '/../../src/' : '';
+var RayTracer;
+var constants;
+
+if (isNodeJS) {
+    RayTracer = require(path + 'RayTracer');
+    constants = require(path + 'Constants');
+} else {
+    RayTracer = require('./RayTracer');
+    constants = require('./Constants');
+}
+
+var rt = new RayTracer(constants.WIDTH, constants.HEIGHT);
 
 self.addEventListener('message', function(e) {
     var msg = e.data;
@@ -35,13 +46,13 @@ self.addEventListener('message', function(e) {
             rt.increment();
             break;
 
-        case isNaN(msg):
-            console.error('Unexpected value: ', msg);
-            break;
-
-        default:
+        case !isNaN(msg):
             var stripID = parseInt(msg);
             var data = rt.render(stripID);
             self.postMessage(data, [data]);
+            break;
+
+        default:
+            console.error('Unexpected value: ', msg);
     }
 }, false);

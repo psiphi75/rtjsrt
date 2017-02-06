@@ -28,15 +28,12 @@ var fs = require('fs');
 const profiling = process.env.PROFILE === '1';
 
 const FPSTimer = require('./src/FPSTimer');
-const RayTracer = require('./src/RayTracer');
+const ManageRayTracing = require('./src/ManageRayTracing');
 const constants = require('./src/Constants');
 
-const imageData = new Array(constants.WIDTH * constants.HEIGHT * 4);
-for (let p = 0; p < imageData.length; p++) {
-    imageData[p] = 255;
-}
+const imageData = new Uint8Array(constants.WIDTH * constants.HEIGHT * 4);
 
-const rt = new RayTracer(constants.WIDTH, constants.HEIGHT, imageData, true);
+var rt = new ManageRayTracing(constants.NUM_WORKERS, constants.WIDTH, constants.HEIGHT, imageData);
 const timer = new FPSTimer();
 let frames = 0;
 
@@ -50,7 +47,7 @@ generate();
 function generate() {
 
     timer.start();
-    rt.render(done);
+    rt.renderFrame(done);
     const fps = timer.stop();
     frames++;
 
@@ -62,19 +59,17 @@ function generate() {
 
         console.log(`${fps.toFixed(2)},${timer.average().toFixed(2)}`);
 
-        if (new Date().getTime() - processStartTime < 60000) {
+        if (new Date().getTime() - processStartTime < 20000) {
             setTimeout(generate, 0);
+        } else {
+            console.log(`frames,${frames * 3}`);
+
+            if (profiling) {
+                profiler.stopProfiling().export(function(error, result) {
+                    fs.writeFileSync('profile.json', result);
+                });
+            }
+            rt.shutDown();
         }
-
     }
-
-}
-
-
-console.log(`frames,${frames}`);
-
-if (profiling) {
-    profiler.stopProfiling().export(function(error, result) {
-        fs.writeFileSync('profile.json', result);
-    });
 }
