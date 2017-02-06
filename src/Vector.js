@@ -24,50 +24,105 @@
 'use strict';
 
 /**
- * General vector object. Stores vector information and has vector operators.
- * @type {{make: make, dot: dot, scale: scale, add: add, sub: sub, length: length, max_val: max_val, normalise: normalise}}
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
+ * @constructor
+ * @struct
  */
-
 function Vector(x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
 }
+
+/**
+ * Dot product
+ * @param  {Object} w
+ * @return {number}
+ */
 Vector.prototype.dot = function(w) {
     return this.x * w.x + this.y * w.y + this.z * w.z;
 };
+
+/**
+ * Add two vectors
+ * @param  {Object} w
+ * @return {Object}
+ */
 Vector.prototype.add = function(w) {
     return new Vector(this.x + w.x, this.y + w.y, this.z + w.z);
 };
+
+/**
+ * Add two vectors, but don't create a new one
+ * @param  {Object} w
+ */
 Vector.prototype.addInplace = function(w) {
     this.x += w.x;
     this.y += w.y;
     this.z += w.z;
 };
+
+/**
+ * Subtract two vectors
+ * @param  {Object} w
+ * @return {Object}
+ */
 Vector.prototype.sub = function(w) {
     return new Vector(this.x - w.x, this.y - w.y, this.z - w.z);
 };
+
+/**
+ * Subtract two vectors, but don't create a new one
+ * @param  {Object} w
+ */
 Vector.prototype.subInplace = function(w) {
     this.x -= w.x;
     this.y -= w.y;
     this.z -= w.z;
 };
+
+/**
+ * Get the length of a Vector
+ * @return {number}
+ */
 Vector.prototype.length = function() {
     return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
 };
+
+/**
+ * normalise a vector
+ * @return {Object}
+ */
 Vector.prototype.normalise = function() {
-    var s = 1 / this.length(this);
+    var s = 1 / this.length();
     return new Vector(this.x * s, this.y * s, this.z * s);
 };
+
+/**
+ * normalise a vector in situ
+ */
 Vector.prototype.normaliseInplace = function() {
-    var s = 1 / this.length(this);
+    var s = 1 / this.length();
     this.x *= s;
     this.y *= s;
     this.z *= s;
 };
+
+/**
+ * Create a copy of the current vector.
+ * @return {Object}
+ */
 Vector.prototype.copy = function () {
     return new Vector(this.x, this.y, this.z);
 };
+
+/**
+ * Scale a vector by f and return the object
+ * @param {number} f
+ * @return {Object}
+ */
 Vector.prototype.scale = function (f) {
     var v = new Vector(this.x, this.y, this.z);
     v.x *= f;
@@ -75,25 +130,49 @@ Vector.prototype.scale = function (f) {
     v.z *= f;
     return v;
 };
+
+/**
+ * Scale a vector by f, in situ
+ * @param {number} f
+ */
 Vector.prototype.scaleInplace = function(f) {
     this.x *= f;
     this.y *= f;
     this.z *= f;
 };
-Vector.prototype.scaleThenAdd = function(v, f) {
-    return new Vector(this.x + v.x * f, this.y + v.y * f, this.z + v.z * f);
-};
+
+/**
+ * The product of each element
+ * @param {Object} w
+ * @return {Object}
+ */
 Vector.prototype.product = function (w) {
     return new Vector(this.x * w.x, this.y * w.y, this.z * w.z);
 };
+
+/**
+ * The product of each element, in situ
+ * @param {Object} w
+ */
 Vector.prototype.productInplace = function(w) {
     this.x *= w.x;
     this.y *= w.y;
     this.z *= w.z;
 };
+
+/**
+ * Check if the vectors have the same values
+ * @param {Object} w
+ * @return {boolean}
+ */
 Vector.prototype.equals = function(w) {
     return this.x === w.x && this.y === w.y && this.z === w.z;
 };
+
+/**
+ * Sum each element together and return the result
+ * @return {number}
+ */
 Vector.prototype.sumElements = function () {
     return this.x + this.y + this.z;
 };

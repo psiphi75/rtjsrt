@@ -32,8 +32,9 @@ var COL_SQUARE_2 = constants.COL_SQUARE_2;
 
 /**
  * Make a sphere.
- * @param {Vector} center_v    the center point of the Sphere
+ * @param {Object} center_v    the center point of the Sphere
  * @constructor
+ * @struct
  */
 function Sphere(center_v) {
     this.c = center_v;      // Center position Vector
@@ -47,6 +48,11 @@ function Sphere(center_v) {
     this.canReceiveShadow = true;
     this.type = 'sphere';
 }
+/**
+ * Sphere intersection
+ * @param  {Object} ray
+ * @return {Object|null}
+ */
 Sphere.prototype.intersect = function (ray) {
     // Intersection with a circle from a ray coming from [px, py, pz] direction [vx, vy, vz]
     //A=vx * vx + vy * vy + vz * vz
@@ -75,12 +81,13 @@ Sphere.prototype.intersect = function (ray) {
 };
 /**
  * Get the normal at point p.
- * @param {Vector} p  The point to get the normal at.
- * @returns {Vector}  The normal Vector.
+ * @param {Object} p  The point to get the normal at.
+ * @returns {Object}  The normal Vector.
  */
 Sphere.prototype.get_norm = function (p) {
     return p.sub(this.c);
 };
+/** @param {number} diff */
 Sphere.prototype.set_diffuse = function (diff) {
     this.diff = diff;
     this.spec = 1.0 - diff;
@@ -88,8 +95,10 @@ Sphere.prototype.set_diffuse = function (diff) {
 
 /**
  * Make a disc. This is just a circle on a plane.
- * @param {Vector} center_v  the center of the disc.
- * @param {Vector} norm_v    the normal of the disc.
+ * @param {Object} center_v  the center of the disc.
+ * @param {Object} norm_v    the normal of the disc.
+ * @constructor
+ * @struct
  */
 function Disc(center_v, norm_v) {
     // Plane equation is a*x + b*y + c*z = d.
@@ -107,8 +116,8 @@ function Disc(center_v, norm_v) {
 }
 /**
  * Intersection with a disc from a ray coming from [px, py, pz] with direction Vector [vx, vy, vz].
- * @param {Ray} ray    the incoming ray
- * @returns {object}      And array with {col, t}
+ * @param {Object} ray    the incoming ray
+ * @returns {Object|null}      And array with {col, t}
  */
 Disc.prototype.intersect = function (ray) {
 
@@ -139,7 +148,7 @@ Disc.prototype.intersect = function (ray) {
 };
 /**
  * Return a copy of the normal Vector for this disc.
- * @returns {Vector} the normal Vector.
+ * @returns {Object} the normal Vector.
  */
 Disc.prototype.get_norm = function () {
     return this.n.copy();
@@ -152,6 +161,8 @@ Disc.prototype.set_diffuse = function (diff) {
 
 /**
  * Light class, can have position and colour.
+ * @constructor
+ * @struct
  */
 function Light(c, colour) {
     this.c = c;
@@ -161,10 +172,12 @@ function Light(c, colour) {
 
 /**
  * Make an eye, the observer. There can only be one observer.
- * @param {Vector} center
+ * @param {Object} center
  * @param {number} width
  * @param {number} height
  * @param {number} depth
+ * @constructor
+ * @struct
  */
 function Eye(center, width, height, depth) {
     this.c = center;
@@ -177,6 +190,8 @@ function Eye(center, width, height, depth) {
 /**
  * Class to make the scene, can add objects, lights.  Requires an eye for constructor.
  * @param {Eye} eye    the observer for the scene.
+ * @constructor
+ * @struct
  */
 function Scene(eye) {
     this.eye = eye;

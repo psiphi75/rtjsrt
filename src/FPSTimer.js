@@ -25,8 +25,6 @@
 
 /**
  * A simple timer that stores the FPS (Frames Per Second) as a list.
- * @returns {{start: start, stop: stop, getFPSList: getFPSList}}
- * @constructor
  */
 function FPSTimer() {
     var fpsTimes = [];

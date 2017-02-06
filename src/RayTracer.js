@@ -58,8 +58,8 @@ var EPSILON = constants.EPSILON;
 
 /**
  * A ray that gets cast.
- * @param {vector} origin
- * @param {vector} direction (must be normalised)
+ * @param {Object} origin
+ * @param {Object} direction (must be normalised)
  * @constructor
  */
 function Ray(origin, direction) {
@@ -67,141 +67,149 @@ function Ray(origin, direction) {
     this.direction = direction;
 }
 
-
+/**
+ * The Ray Tracer
+ * @param {number} cols
+ * @param {number} rows
+ * @param {Array<number>} grid
+ * @param {boolean} do_physics
+ * @constructor
+ * @struct
+ */
 function RayTracer(cols, rows, grid, do_physics) {
     this.cols = cols;
     this.rows = rows;
     this.grid = grid;
     this.do_physics = do_physics;
     this.depth = 9;
-    var self = this;
     this.timers = {
         raytrace: new FPSTimer(),
         intersect: new FPSTimer(),
         getShadeAtPoint: new FPSTimer()
     };
-    self.isFirstRun = true;
 
-    init_scene();
-    init_calcs();
 
     /**************************************/
     /* Create the scene, add our objects. */
     /**************************************/
-    function init_scene() {
 
-        // set up the Physics
-        self.physics = new Physics(GROUND_PLANE, {
-            bouncing: false
-        });
 
-        // Init the eye and scene
-        var eye = new Objects.Eye(new Vector(0.0, 2, -15.0), 0.75, 0.75, 2.0);
-        self.scene = new Objects.Scene(eye);
-        self.scene.ambient_light = 0.3;
+    // set up the Physics
+    this.physics = new Physics(GROUND_PLANE, {
+        bouncing: false
+    });
 
-        // Add a disc
-        var disc_center = new Vector(0.0, 0.0, 0);
-        var disc_normal = new Vector(0.0, 1.0, 0.0);
-        var disc = new Objects.Disc(disc_center, disc_normal);
-        disc.r = 6;
-        disc.rfl = 0.7; // Reflectivity -> 0.0 to 1.0
-        disc.rfr = 0; // Refractivity
-        disc.ambient_light = 0.6;
-        disc.set_diffuse(0.2);
-        disc.canCreateShadow = false;
-        disc.canReceiveShadow = true;
-        self.scene.add_object(disc);
+    // Init the eye and scene
+    var eye = new Objects.Eye(new Vector(0.0, 2, -15.0), 0.75, 0.75, 2.0);
+    this.scene = new Objects.Scene(eye);
+    this.scene.ambient_light = 0.3;
 
-        // Add a sphere
-        var sph_center = new Vector(0.7, 1.2, 0.4);
-        var sph = new Objects.Sphere(sph_center);
-        sph.r = 1.0; // Radius
-        sph.col = constants.COL_RED; // Colour of sphere
-        sph.rfl = 0.9; // Reflectivity -> 0.0 to 1.0
-        sph.rfr = 0; // Refractivity
-        sph.ambient_light = 0.2;
-        sph.set_diffuse(0.2);
-        sph.canCreateShadow = true;
-        sph.canReceiveShadow = false;
-        self.scene.add_object(sph);
-        self.physics.add_object(sph);
+    // Add a disc
+    var disc_center = new Vector(0.0, 0.0, 0);
+    var disc_normal = new Vector(0.0, 1.0, 0.0);
+    var disc = new Objects.Disc(disc_center, disc_normal);
+    disc.r = 6;
+    disc.rfl = 0.7; // Reflectivity -> 0.0 to 1.0
+    disc.rfr = 0; // Refractivity
+    disc.ambient_light = 0.6;
+    disc.set_diffuse(0.2);
+    disc.canCreateShadow = false;
+    disc.canReceiveShadow = true;
+    this.scene.add_object(disc);
 
-        // ... and another sphere
-        var sph2_center = new Vector(-1.5, 1.6, 0.4);
-        var sph2 = new Objects.Sphere(sph2_center);
-        sph2.r = 0.8;
-        sph2.col = constants.COL_WHITE;
-        sph2.rfl = 0.6;
-        sph2.rfr = 0; // Refractivity
-        sph2.ambient_light = 0.2;
-        sph2.set_diffuse(0.7);
-        sph2.canCreateShadow = true;
-        sph2.canReceiveShadow = false;
-        self.scene.add_object(sph2);
-        self.physics.add_object(sph2);
+    // Add a sphere
+    var sph_center = new Vector(0.7, 1.2, 0.4);
+    var sph = new Objects.Sphere(sph_center);
+    sph.r = 1.0; // Radius
+    sph.col = constants.COL_RED; // Colour of sphere
+    sph.rfl = 0.9; // Reflectivity -> 0.0 to 1.0
+    sph.rfr = 0; // Refractivity
+    sph.ambient_light = 0.2;
+    sph.set_diffuse(0.2);
+    sph.canCreateShadow = true;
+    sph.canReceiveShadow = false;
+    this.scene.add_object(sph);
+    this.physics.add_object(sph);
 
-        // ... and another sphere
-        var sph3_center = new Vector(1.2, 0.8, -1.8);
-        var sph3 = new Objects.Sphere(sph3_center);
-        sph3.r = 0.8;
-        sph3.col = constants.COL_WHITE;
-        sph3.rfl = 0.4;
-        sph3.rfr = 1.12; // Refractivity
-        sph3.ambient_light = 0.05;
-        sph3.set_diffuse(0);
-        sph3.canCreateShadow = true;
-        sph3.canReceiveShadow = false;
-        self.scene.add_object(sph3);
-        self.physics.add_object(sph3);
+    // ... and another sphere
+    var sph2_center = new Vector(-1.5, 1.6, 0.4);
+    var sph2 = new Objects.Sphere(sph2_center);
+    sph2.r = 0.8;
+    sph2.col = constants.COL_WHITE;
+    sph2.rfl = 0.6;
+    sph2.rfr = 0; // Refractivity
+    sph2.ambient_light = 0.2;
+    sph2.set_diffuse(0.7);
+    sph2.canCreateShadow = true;
+    sph2.canReceiveShadow = false;
+    this.scene.add_object(sph2);
+    this.physics.add_object(sph2);
 
-        // Add a light
-        var light_c = new Vector(5, 7.5, -2.0);
-        var light_col = constants.COL_WHITE;
-        var light = new Objects.Light(light_c, light_col);
-        self.scene.add_light(light);
-    }
+    // ... and another sphere
+    var sph3_center = new Vector(1.2, 0.8, -1.8);
+    var sph3 = new Objects.Sphere(sph3_center);
+    sph3.r = 0.8;
+    sph3.col = constants.COL_WHITE;
+    sph3.rfl = 0.4;
+    sph3.rfr = 1.12; // Refractivity
+    sph3.ambient_light = 0.05;
+    sph3.set_diffuse(0);
+    sph3.canCreateShadow = true;
+    sph3.canReceiveShadow = false;
+    this.scene.add_object(sph3);
+    this.physics.add_object(sph3);
 
-    function init_calcs() {
-        // Start in the top left
-        var xDirectionStart = -self.scene.eye.w / 2.0;
-        var yDirectionStart = self.scene.eye.h / 2.0;
-        var direction = new Vector(xDirectionStart, yDirectionStart, self.scene.eye.d);
-        var origin = self.scene.eye.c;
-        var dnx = new Vector(self.scene.eye.w / (self.cols - 1.0), 0, 0);
-        var dny = new Vector(0, self.scene.eye.h / (self.rows - 1.0), 0);
+    // Add a light
+    var light_c = new Vector(5, 7.5, -2.0);
+    var light_col = constants.COL_WHITE;
+    var light = new Objects.Light(light_c, light_col);
+    this.scene.add_light(light);
 
-        self.preCalcs = [];
-        var strip;
-        var pnt = 0;
-        for (var row = 0; row < self.rows; row++) {
 
-            if (row % constants.SQUARE_SIZE === 0) {
-                strip = [];
-            }
+    /**************************************/
+    /*     Do some pre-calculations.      */
+    /**************************************/
 
-            for (var col = 0; col < self.cols; col++) {
-                direction.addInplace(dnx);
-                var firstRay = new Ray(origin, direction.normalise());
-                strip.push({
-                    firstRay: firstRay,
-                    pnt: pnt,
-                    pixel_col: new Vector(0, 0, 0)
-                });
-                pnt++;
-            }
+    // Start in the top left
+    var xDirectionStart = -this.scene.eye.w / 2.0;
+    var yDirectionStart = this.scene.eye.h / 2.0;
+    var direction = new Vector(xDirectionStart, yDirectionStart, this.scene.eye.d);
+    var origin = this.scene.eye.c;
+    var dnx = new Vector(this.scene.eye.w / (this.cols - 1.0), 0, 0);
+    var dny = new Vector(0, this.scene.eye.h / (this.rows - 1.0), 0);
 
-            direction.x = xDirectionStart;
-            direction.subInplace(dny);
+    this.preCalcs = [];
+    var strip;
+    var pnt = 0;
+    for (var row = 0; row < this.rows; row++) {
 
-            if ((row + 1) % constants.SQUARE_SIZE === 0) {
-                self.preCalcs.push(strip);
-            }
+        if (row % constants.SQUARE_SIZE === 0) {
+            strip = [];
+        }
 
+        for (var col = 0; col < this.cols; col++) {
+            direction.addInplace(dnx);
+            var firstRay = new Ray(origin, direction.normalise());
+            strip.push({
+                firstRay: firstRay,
+                pnt: pnt,
+                pixel_col: new Vector(0, 0, 0)
+            });
+            pnt++;
+        }
+
+        direction.x = xDirectionStart;
+        direction.subInplace(dny);
+
+        if ((row + 1) % constants.SQUARE_SIZE === 0) {
+            this.preCalcs.push(strip);
         }
 
     }
+
 }
+
+
 /**
  * Render the scene.  This will update the data object that was provided.
  */
@@ -212,31 +220,6 @@ RayTracer.prototype.render = function() {
         self.physics.apply_forces();
     }
     var objs = self.scene.objs;
-
-    if (self.isFirstRun) {
-        self.isFirstRun = false;
-        warm_up();
-    }
-    function warm_up() {
-        for (var i = 0; i < 500; i++) {
-
-            let rndStrip = Math.round(Math.random() * (self.preCalcs.length - 1));
-
-            let strip = self.preCalcs[rndStrip];
-            let sPnt = Math.round(Math.random() * (strip.length - 1));
-
-            let point = strip[sPnt];
-            let pixel_col = raytrace(self.depth, strip[sPnt].firstRay, -1, COL_BACKGROUND, 1);
-
-            /* Set the pixel_col value of the pixel */
-            let canvasPnt = point.pnt * 4;
-            self.grid[canvasPnt] = pixel_col.x * 255;
-            self.grid[canvasPnt + 1] = pixel_col.y * 255;
-            self.grid[canvasPnt + 2] = pixel_col.z * 255;
-        }
-    }
-    
-    // self.timers.getShadeAtPoint.start();
 
     // The main loop
     for (let i = self.preCalcs.length - 1; i >= 0; i--) {
@@ -270,7 +253,9 @@ RayTracer.prototype.render = function() {
             return raytrace(self.depth, strip[s].firstRay, -1, COL_BACKGROUND, 1);
         }
 
-        function setBlack() { return constants.COL_BLACK; }
+        function setBlack() {
+            return constants.COL_BLACK;
+        }
 
         // TopLeft (TL), TopRight (TR), ...
         var sPntTL = 0;
@@ -279,7 +264,7 @@ RayTracer.prototype.render = function() {
         var sPntBR = sPntBL + constants.SQUARE_SIZE - 1;
 
         // For Each Square
-        for (; sPntTL < self.cols; ) {
+        for (; sPntTL < self.cols;) {
 
             var pixel_colTL = raytrace(self.depth, strip[sPntTL].firstRay, -1, COL_BACKGROUND, 1);
             var pixel_colTR = raytrace(self.depth, strip[sPntTR].firstRay, -1, COL_BACKGROUND, 1);
@@ -320,7 +305,9 @@ RayTracer.prototype.render = function() {
      * @param {number} depth     How many iterations left
      * @param {Ray} ray          The ray
      * @param {number} source_i  The ID of the object the ray comes from
-     * @returns {Vector}         An RGB colour
+     * @param {Object} colour    An RGB colour
+     * @param {number} rindex    Refractivity
+     * @returns {Object}         An RGB colour
      */
     function raytrace(depth, ray, source_i, colour, rindex) {
         // self.timers.raytrace.start();
@@ -356,6 +343,16 @@ RayTracer.prototype.render = function() {
 
     }
 
+    /**
+     * Get the shade of the pixel - where the work is done
+     * @param {number} depth     How many iterations left
+     * @param {Ray} ray          The ray
+     * @param {number} source_i  The ID of the object the ray comes from
+     * @param {Object} intersection    The intersection information
+     * @param {Object} colour    An RGB colour
+     * @param {number} rindex    Refractivity
+     * @returns {Object}         An RGB colour
+     */
     function getShadeAtPoint(depth, ray, source_i, intersection, colour, rindex) {
 
         if (depth === 0 || source_i === -1) {
@@ -391,8 +388,8 @@ RayTracer.prototype.render = function() {
                 && objs[source_i].canReceiveShadow
                 && objs[i].canCreateShadow
                 && objs[i].intersect(r) !== null) {
-                    // self.timers.intersect.stop();
-                    // self.timers.getShadeAtPoint.resume();
+                // self.timers.intersect.stop();
+                // self.timers.getShadeAtPoint.resume();
                 shade = 0;
                 break;
             }
@@ -418,7 +415,7 @@ RayTracer.prototype.render = function() {
         if (obj.spec > 0) {
             // point light source: sample once for specular highlight
 
-            var R = L;  // NOTE: don't use L after this;
+            var R = L; // NOTE: don't use L after this;
             R.subInplace(N.scale(2 * dotLN));
             var dotVR = V.dot(R);
             if (dotVR > 0) {
