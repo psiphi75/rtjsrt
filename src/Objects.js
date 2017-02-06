@@ -1,6 +1,6 @@
 /*********************************************************************
  *                                                                   *
- *   Copyright 2016 Simon M. Werner                                  *
+ *   Copyright 2017 Simon M. Werner                                  *
  *                                                                   *
  *   Licensed to the Apache Software Foundation (ASF) under one      *
  *   or more contributor license agreements.  See the NOTICE file    *
@@ -206,11 +206,22 @@ Scene.prototype.add_object = function (obj) {
     obj.rendered = false;            // Has this object been rendered in the last sequence
 };
 
+/**
+ * A ray that gets cast.
+ * @param {Object} origin
+ * @param {Object} direction (must be normalised)
+ * @constructor
+ */
+function Ray(origin, direction) {
+    this.origin = origin;
+    this.direction = direction;
+}
 
 module.exports = {
     Scene: Scene,
     Eye: Eye,
     Light: Light,
     Disc: Disc,
-    Sphere: Sphere
+    Sphere: Sphere,
+    Ray: Ray
 };

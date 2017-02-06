@@ -1,6 +1,6 @@
 /*********************************************************************
  *                                                                   *
- *   Copyright 2016 Simon M. Werner                                  *
+ *   Copyright 2017 Simon M. Werner                                  *
  *                                                                   *
  *   Licensed to the Apache Software Foundation (ASF) under one      *
  *   or more contributor license agreements.  See the NOTICE file    *
@@ -44,21 +44,32 @@ let frames = 0;
 console.log(new Date());
 console.log('FPS,FPS(avg)');
 
-let startTime = new Date().getTime();
-while (new Date().getTime() - startTime < 60000) {
+let processStartTime = new Date().getTime();
+generate();
+
+function generate() {
 
     timer.start();
-    rt.render();
+    rt.render(done);
     const fps = timer.stop();
     frames++;
 
-    if (profiling && frames > 10) {
-        profiler.startProfiling();
+    function done() {
+
+        if (profiling && frames > 10) {
+            profiler.startProfiling();
+        }
+
+        console.log(`${fps.toFixed(2)},${timer.average().toFixed(2)}`);
+
+        if (new Date().getTime() - processStartTime < 60000) {
+            setTimeout(generate, 0);
+        }
+
     }
 
-    console.log(`${fps.toFixed(2)},${timer.average().toFixed(2)}`);
-
 }
+
 
 console.log(`frames,${frames}`);
 

@@ -1,6 +1,6 @@
 /*********************************************************************
  *                                                                   *
- *   Copyright 2016 Simon M. Werner                                  *
+ *   Copyright 2017 Simon M. Werner                                  *
  *                                                                   *
  *   Licensed to the Apache Software Foundation (ASF) under one      *
  *   or more contributor license agreements.  See the NOTICE file    *
@@ -23,56 +23,51 @@
 
 'use strict';
 
-var animationIsRunning = true;
+var parallelLimit = require('async').parallelLimit;
 
-// Let the page load.
-window.onload = function() {
+function WorkerManager(uri, numWorkers) {
+    this.activeWorkers = [];
+    this.idleWorkers = [];
+    this.numWorkers = numWorkers;
 
-    // Attach runPause
-    document.getElementById('run_button').addEventListener('click', function runPause() {
-        animationIsRunning = !animationIsRunning;
-        if (animationIsRunning) {
-            generate();
-        }
-    }, false);
-
-    var constants = require('./src/Constants');
-    var RayTracer = require('./src/RayTracer');
-    var FPSTimer = require('./src/FPSTimer');
-    var timer = new FPSTimer();
-
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
-    context.canvas.height = constants.HEIGHT;
-    context.canvas.width = constants.WIDTH;
-    var image = context.getImageData(0, 0, constants.WIDTH, constants.HEIGHT);
-    var imageData = image.data;
-
-    // Set the colour to white
-    for (var p = 0; p < imageData.length; p += 4) {
-        imageData[p + 3] = 255;
+    for (var i = 0; i < numWorkers; i++ ) {
+        var worker = new Worker(uri);
+        this.idleWorkers.push(worker);
     }
+}
+WorkerManager.prototype.addWorkToQueue = function (messages, intermediateCallback, finalCallback) {
 
-    var rt = new RayTracer(constants.WIDTH, constants.HEIGHT, imageData, true);
-    generate();
-
-    function generate() {
-
-        timer.start();
-        rt.render();
-        done();
-
-        function done() {
-
-            var fps = timer.stop();
-
-            context.putImageData(image, 0, 0);
-
-            document.getElementById('fps').innerHTML = '<p>FPS: ' + fps.toFixed(1) + ' (' + timer.average().toFixed(2) + ')</p>';
-            if (animationIsRunning) setTimeout(generate, 0);
-
-        }
-
-    }
-
+    var self = this;
+    var work = messages.map(function(message) {
+        return function(asyncDoneCallback) {
+            self.assignWorker(message, function(result) {
+                intermediateCallback(null, result);
+                asyncDoneCallback(null);
+            });
+        };
+    });
+    parallelLimit(work, this.numWorkers, finalCallback);
 };
+
+WorkerManager.prototype.assignWorker = function (message, callback) {
+    if (this.idleWorkers.length === 0) throw new Error('WorkerManager.assignWorker: no more idle workers');
+
+    var worker = this.idleWorkers.shift();
+    this.activeWorkers.push(worker);
+
+    worker.addEventListener('message', waitForResult, false);
+    worker.postMessage(message);
+
+    function waitForResult(data) {
+
+        // Remove the active worker
+        var index = this.activeWorkers.indexOf(worker);
+        if (index > -1) {
+            this.activeWorkers.splice(index, 1);
+        }
+        this.idleWorkers.push(worker);
+        callback(null, data);
+    }
+};
+
+module.exports = WorkerManager;

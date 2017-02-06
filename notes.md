@@ -96,3 +96,9 @@ I thought this would speed things up.
 # 22 - Warm up the compiler
 
 => 255/min
+
+# 23 - ClosureCompiler
+
+=> 255/min
+
+# 24 - Threads

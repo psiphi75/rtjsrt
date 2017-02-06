@@ -1,6 +1,6 @@
 /*********************************************************************
  *                                                                   *
- *   Copyright 2016 Simon M. Werner                                  *
+ *   Copyright 2017 Simon M. Werner                                  *
  *                                                                   *
  *   Licensed to the Apache Software Foundation (ASF) under one      *
  *   or more contributor license agreements.  See the NOTICE file    *
