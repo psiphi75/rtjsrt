@@ -80,6 +80,7 @@ function RayTracer(cols, rows, grid, do_physics) {
         intersect: new FPSTimer(),
         getShadeAtPoint: new FPSTimer()
     };
+    self.isFirstRun = true;
 
     init_scene();
     init_calcs();
@@ -212,7 +213,10 @@ RayTracer.prototype.render = function() {
     }
     var objs = self.scene.objs;
 
-    warm_up();
+    if (self.isFirstRun) {
+        self.isFirstRun = false;
+        warm_up();
+    }
     function warm_up() {
         for (var i = 0; i < 500; i++) {
 
@@ -231,7 +235,7 @@ RayTracer.prototype.render = function() {
             self.grid[canvasPnt + 2] = pixel_col.z * 255;
         }
     }
-
+    
     // self.timers.getShadeAtPoint.start();
 
     // The main loop

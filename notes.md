@@ -94,3 +94,5 @@ I thought this would speed things up.
 => 57 / min
 
 # 22 - Warm up the compiler
+
+=> 255/min
