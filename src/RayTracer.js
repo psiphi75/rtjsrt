@@ -238,6 +238,18 @@ RayTracer.prototype.render = function(stripID) {
     raytraceStrip(self.strips[stripID]);
     return resultGrid.buffer;
 
+    function raytraceAndSave(sPnt, strip) {
+        raytrace(static_colour, self.depth, strip[sPnt].firstRay, -1, 1);
+        static_colour.scaleInplace(255);
+        static_colour.maxValInplace(255);
+
+        var p = sPnt * 4;
+        resultGrid[p] = static_colour.x;
+        resultGrid[p + 1] = static_colour.y;
+        resultGrid[p + 2] = static_colour.z;
+        // resultGrid[p + 3] = 255;
+    }
+
 
     function raytraceStrip(strip) {
 
@@ -250,21 +262,24 @@ RayTracer.prototype.render = function(stripID) {
         // For Each Square
         for (; sPntTL < self.cols;) {
 
-            var pixel_colTL = COL_BACKGROUND.copy(); raytrace(pixel_colTL, self.depth, strip[sPntTL].firstRay, -1, 1);
-            var pixel_colTR = COL_BACKGROUND.copy(); raytrace(pixel_colTR, self.depth, strip[sPntTR].firstRay, -1, 1);
-            var pixel_colBL = COL_BACKGROUND.copy(); raytrace(pixel_colBL, self.depth, strip[sPntBL].firstRay, -1, 1);
-            var pixel_colBR = COL_BACKGROUND.copy(); raytrace(pixel_colBR, self.depth, strip[sPntBR].firstRay, -1, 1);
-
-            var sPnt = sPntTL;
+            var pixSum = 0;
+            raytraceAndSave(sPntTL, strip);
+            pixSum += static_colour.sumElements();
+            raytraceAndSave(sPntTR, strip);
+            pixSum += static_colour.sumElements();
+            raytraceAndSave(sPntBL, strip);
+            pixSum += static_colour.sumElements();
+            raytraceAndSave(sPntBR, strip);
+            pixSum += static_colour.sumElements();
 
             // Check to see if we can fill the square with black
-            var pixSum = pixel_colTL.add(pixel_colTR).add(pixel_colBL).add(pixel_colBR);
-            const allElementsAreZero = pixSum.sumElements() === 0;
+            const allElementsAreZero = (pixSum === 0);
+
+            var sPnt = sPntTL;
 
             // Fill the square with colour (or black)
             if (allElementsAreZero) {
                 for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                    // console.log(r, sPnt, self.staticBackgroundLine.length, resultGrid.length, new Uint8ClampedArray(self.staticBackgroundLine).length)
                     resultGrid.set(new Uint8ClampedArray(self.staticBackgroundLine), sPnt * 4);
                     sPnt += self.cols;
                 }
@@ -273,24 +288,9 @@ RayTracer.prototype.render = function(stripID) {
                 for (let r = 0; r < constants.SQUARE_SIZE; r++) {
                     for (let c = 0; c < constants.SQUARE_SIZE; c++) {
                         // Don't need to calculate those that have already be calculated
-                        if (sPnt === sPntTL) {
-                            static_colour = pixel_colTL;
-                        } else  if (sPnt === sPntTR) {
-                            static_colour = pixel_colTR;
-                        } else if (sPnt === sPntBL) {
-                            static_colour = pixel_colBL;
-                        } else if (sPnt === sPntBR) {
-                            static_colour = pixel_colBR;
-                        } else {
-                            raytrace(static_colour, self.depth, strip[sPnt].firstRay, -1, 1);
+                        if (sPnt !== sPntTL && sPnt !== sPntTR && sPnt !== sPntBL && sPnt !== sPntBR) {
+                            raytraceAndSave(sPnt, strip);
                         }
-                        static_colour.scaleInplace(255);
-                        static_colour.maxValInplace(255);
-
-                        resultGrid[sPnt * 4] = static_colour.x;
-                        resultGrid[sPnt * 4 + 1] = static_colour.y;
-                        resultGrid[sPnt * 4 + 2] = static_colour.z;
-                        // resultGrid[sPnt * 4 + 3] = 255;
                         sPnt++;
                     }
                     sPnt += self.cols - constants.SQUARE_SIZE;
