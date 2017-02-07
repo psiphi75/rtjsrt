@@ -156,3 +156,9 @@ peice of code C++ is not worth it.
 8 threads => 1095/min (SQUARE_SIZE = 12)
 
 Let JS do the memory copy, instead of for loop.
+
+# 31 - Improved memory copying
+
+8 threads => 1119/min (SQUARE_SIZE = 12)
+
+Let JS do the memory copy, instead of for loop.

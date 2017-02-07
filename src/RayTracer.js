@@ -197,11 +197,10 @@ function RayTracer(cols, rows) {
     // Prepare the result strip, this will be copied, it means we don't have
     // do the 255 copy.
     var len = this.strips[0].length * 4;
-    var a = new Uint8ClampedArray(len);
+    this.preparedStripBuf = new Uint8ClampedArray(len);
     for (let i = 3; i < len; i += 4) {
-        a[i] = 255;
+        this.preparedStripBuf[i] = 255;
     }
-    this.preparedStripBuf = a.buffer;
 
     // We create this line so we don't have to copy too many items too many times
     let staticBackgroundLine = new Uint8ClampedArray(constants.SQUARE_SIZE * 4);
@@ -214,7 +213,7 @@ function RayTracer(cols, rows) {
         staticBackgroundLine[i + 2] = background.z;
         staticBackgroundLine[i + 3] = 255;
     }
-    this.staticBackgroundLine = new Uint8ClampedArray(staticBackgroundLine);
+    this.staticBackgroundLine = staticBackgroundLine;
 }
 
 RayTracer.prototype.getNumStrips = function() {
@@ -265,7 +264,8 @@ RayTracer.prototype.render = function(stripID) {
             // Fill the square with colour (or black)
             if (allElementsAreZero) {
                 for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                    resultGrid.set(self.staticBackgroundLine, sPnt * 4);
+                    // console.log(r, sPnt, self.staticBackgroundLine.length, resultGrid.length, new Uint8ClampedArray(self.staticBackgroundLine).length)
+                    resultGrid.set(new Uint8ClampedArray(self.staticBackgroundLine), sPnt * 4);
                     sPnt += self.cols;
                 }
             } else {
