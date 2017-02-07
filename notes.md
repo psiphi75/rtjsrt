@@ -129,3 +129,7 @@ Bad performance due to array copying
 12 threads => 891/min
 16 threads => 879/min
 32 threads => 804/min
+
+# 26 - Refactor getShadeAtPoint
+
+8 threads => 1014/min

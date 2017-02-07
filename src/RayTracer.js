@@ -343,7 +343,7 @@ RayTracer.prototype.render = function(stripID) {
 
         if (depth === 0 || source_i === -1) {
             // self.timers.getShadeAtPoint.stop();
-            return colour.copy();
+            return colour;
         }
         // object found, return the colour
 
