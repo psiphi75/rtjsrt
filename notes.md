@@ -159,12 +159,18 @@ Let JS do the memory copy, instead of for loop.
 
 # 31 - Improved memory copying
 
-8 threads => 1119/min (SQUARE_SIZE = 12)
+8 threads => 940/min (SQUARE_SIZE = 12)
 
 Let JS do the memory copy, instead of for loop.
 
 # 32 - raytraceStrip "enhancements"
 
-8 threads => 987/min (SQUARE_SIZE = 12)
+8 threads => 930/min (SQUARE_SIZE = 12)
 
 Let JS do the memory copy, instead of for loop.
+
+# 33 - Baseline
+
+Had to re-baseline the tests.  Since some at #30 seemed a bit off
+8 threads => 1054/min (SQUARE_SIZE = 8)
+8 threads => 1054/min (SQUARE_SIZE = 12)

@@ -27,7 +27,7 @@ const Vector = require('./Vector');
 
 const constants = {
 
-    NUM_WORKERS: 8,
+    NUM_WORKERS: 1,
 
     // Raytracing Depth
     DEPTH: 9,
@@ -40,7 +40,7 @@ const constants = {
     HEIGHT: 696,
 
     // How big a grid size to use for checking contents (in pixels)
-    SQUARE_SIZE: 8,
+    SQUARE_SIZE: 12,
 
     // Named Colours
     COL_SILVER: new Vector(0.85, 0.85, 0.85),

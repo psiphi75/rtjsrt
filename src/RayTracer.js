@@ -196,24 +196,12 @@ function RayTracer(cols, rows) {
 
     // Prepare the result strip, this will be copied, it means we don't have
     // do the 255 copy.
-    var len = this.strips[0].length * 4;
-    this.preparedStripBuf = new Uint8ClampedArray(len);
+    var len = this.cols * constants.SQUARE_SIZE * 4;
+    this.preparedStrip = new Uint8ClampedArray(len);
     for (let i = 3; i < len; i += 4) {
-        this.preparedStripBuf[i] = 255;
+        this.preparedStrip[i] = 255;
     }
 
-    // We create this line so we don't have to copy too many items too many times
-    let staticBackgroundLine = new Uint8ClampedArray(constants.SQUARE_SIZE * 4);
-    const background = COL_BACKGROUND.copy();
-    background.scaleInplace(255);
-    background.maxValInplace(255);
-    for (let i = 0; i < staticBackgroundLine.length * 4; i += 4) {
-        staticBackgroundLine[i] = background.x;
-        staticBackgroundLine[i + 1] = background.y;
-        staticBackgroundLine[i + 2] = background.z;
-        staticBackgroundLine[i + 3] = 255;
-    }
-    this.staticBackgroundLine = staticBackgroundLine;
 }
 
 RayTracer.prototype.getNumStrips = function() {
@@ -231,27 +219,20 @@ RayTracer.prototype.render = function(stripID) {
 
     var self = this;
     var objs = self.scene.objs;
-    var resultGrid = new Uint8ClampedArray(this.preparedStripBuf);
-    var static_colour = COL_BACKGROUND.copy();
+    var resultGrid = new Uint8ClampedArray(this.preparedStrip);
 
     // The "main loop"
     raytraceStrip(self.strips[stripID]);
     return resultGrid.buffer;
 
-    function raytraceAndSave(sPnt, strip) {
-        raytrace(static_colour, self.depth, strip[sPnt].firstRay, -1, 1);
-        static_colour.scaleInplace(255);
-        static_colour.maxValInplace(255);
-
-        var p = sPnt * 4;
-        resultGrid[p] = static_colour.x;
-        resultGrid[p + 1] = static_colour.y;
-        resultGrid[p + 2] = static_colour.z;
-        // resultGrid[p + 3] = 255;
-    }
-
 
     function raytraceStrip(strip) {
+
+        var static_colour = COL_BACKGROUND.copy();
+
+        const static_background = COL_BACKGROUND.copy();
+        static_background.scaleInplace(255);
+        static_background.maxValInplace(255);
 
         // TopLeft (TL), TopRight (TR), ...
         var sPntTL = 0;
@@ -262,39 +243,46 @@ RayTracer.prototype.render = function(stripID) {
         // For Each Square
         for (; sPntTL < self.cols;) {
 
-            var pixSum = 0;
-            raytraceAndSave(sPntTL, strip);
-            pixSum += static_colour.sumElements();
-            raytraceAndSave(sPntTR, strip);
-            pixSum += static_colour.sumElements();
-            raytraceAndSave(sPntBL, strip);
-            pixSum += static_colour.sumElements();
-            raytraceAndSave(sPntBR, strip);
-            pixSum += static_colour.sumElements();
-
-            // Check to see if we can fill the square with black
-            const allElementsAreZero = (pixSum === 0);
+            var pixel_colTL = COL_BACKGROUND.copy(); raytrace(pixel_colTL, self.depth, strip[sPntTL].firstRay, -1, 1);
+            var pixel_colTR = COL_BACKGROUND.copy(); raytrace(pixel_colTR, self.depth, strip[sPntTR].firstRay, -1, 1);
+            var pixel_colBL = COL_BACKGROUND.copy(); raytrace(pixel_colBL, self.depth, strip[sPntBL].firstRay, -1, 1);
+            var pixel_colBR = COL_BACKGROUND.copy(); raytrace(pixel_colBR, self.depth, strip[sPntBR].firstRay, -1, 1);
 
             var sPnt = sPntTL;
 
-            // Fill the square with colour (or black)
-            if (allElementsAreZero) {
-                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                    resultGrid.set(new Uint8ClampedArray(self.staticBackgroundLine), sPnt * 4);
-                    sPnt += self.cols;
-                }
-            } else {
+            // Check to see if we can fill the square with black
+            var pixSum = pixel_colTL.add(pixel_colTR).add(pixel_colBL).add(pixel_colBR);
+            const allElementsAreZero = pixSum.sumElements() === 0;
 
-                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                    for (let c = 0; c < constants.SQUARE_SIZE; c++) {
+            // Fill the square with colour (or black)
+            for (let r = 0; r < constants.SQUARE_SIZE; r++) {
+                for (let c = 0; c < constants.SQUARE_SIZE; c++) {
+                    if (allElementsAreZero) {
+                        static_colour = static_background;
+                    } else {
                         // Don't need to calculate those that have already be calculated
-                        if (sPnt !== sPntTL && sPnt !== sPntTR && sPnt !== sPntBL && sPnt !== sPntBR) {
-                            raytraceAndSave(sPnt, strip);
+                        if (sPnt === sPntTL) {
+                            static_colour = pixel_colTL;
+                        } else  if (sPnt === sPntTR) {
+                            static_colour = pixel_colTR;
+                        } else if (sPnt === sPntBL) {
+                            static_colour = pixel_colBL;
+                        } else if (sPnt === sPntBR) {
+                            static_colour = pixel_colBR;
+                        } else {
+                            raytrace(static_colour, self.depth, strip[sPnt].firstRay, -1, 1);
                         }
-                        sPnt++;
+                        static_colour.scaleInplace(255);
+                        static_colour.maxValInplace(255);
                     }
-                    sPnt += self.cols - constants.SQUARE_SIZE;
+
+                    resultGrid[sPnt * 4] = static_colour.x;
+                    resultGrid[sPnt * 4 + 1] = static_colour.y;
+                    resultGrid[sPnt * 4 + 2] = static_colour.z;
+                    // resultGrid[sPnt * 4 + 3] = 255;
+                    sPnt++;
                 }
+                sPnt += self.cols - constants.SQUARE_SIZE;
             }
 
             sPntTL += constants.SQUARE_SIZE;
