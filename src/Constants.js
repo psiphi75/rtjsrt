@@ -27,7 +27,7 @@ const Vector = require('./Vector');
 
 const constants = {
 
-    NUM_WORKERS: 1,
+    NUM_WORKERS: 8,
 
     // Raytracing Depth
     DEPTH: 9,

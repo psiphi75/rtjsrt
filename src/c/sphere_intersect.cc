@@ -15,28 +15,6 @@ using v8::Value;
 using v8::Handle;
 using v8::Null;
 
-
-// .intersect = function (rayDirection, rayOrigin, c, r, col) {
-// var A = ray.direction.dot(ray.direction);
-// var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(c));
-// var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(c) + c.dot(c) - r * r;
-// var D = B * B - 4.0 * A * C;
-// if (D > 0.0) {
-//     var sqrtD = Math.sqrt(D);
-//     if (-B - sqrtD > 0) {
-//         var t = (-B - sqrtD) / (2.0 * A);
-//         var pi = ray.origin.add(ray.direction.scale(t));
-//         return {
-//             col: col,
-//             t: t,
-//             pi: pi
-//         };
-//     }
-// }
-//
-// // No hit, or ray is in wrong direction (when t < zero)
-// return null;
-
 Vector unpack_vector(Isolate * isolate, const v8::FunctionCallbackInfo<v8::Value>& args, int argN) {
         Handle<Object> vector_obj = Handle<Object>::Cast(args[argN]);
 
