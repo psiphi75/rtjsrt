@@ -55,13 +55,10 @@ ManageRayTracing.prototype.renderFrame = function(callback) {
         callback();
     }
 
+    // Copy the data accross
     function applyData(gridBuf, stripID) {
         let startPnt = stripID * gridBuf.byteLength;
-        let endPnt = startPnt + gridBuf.byteLength - 1;
-        let grid = new Uint8ClampedArray(gridBuf);
-        for (let i = 0, pnt = startPnt; pnt < endPnt; pnt++, i++) {
-            self.grid[pnt] = grid[i];
-        }
+        self.grid.set(new Uint8ClampedArray(gridBuf), startPnt);
     }
 
 };

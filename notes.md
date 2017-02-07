@@ -144,3 +144,14 @@ peice of code C++ is not worth it.
 # 28 - Start reducing the number of new Colour objects
 
 8 threads => 1032/min
+
+# 29 - Colour is now mainly just a reference and not created new
+
+8 threads => 1054/min
+
+# 30 - Improved memory copying
+
+8 threads => 1074/min
+
+Let JS do the memory copy, instead of for loop.
+

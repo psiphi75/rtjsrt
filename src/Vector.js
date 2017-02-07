@@ -37,6 +37,16 @@ function Vector(x, y, z) {
 }
 
 /**
+ * Set the values to the given vector;
+ * @param {Object} w The vector
+ */
+Vector.prototype.set = function(w) {
+    this.x = w.x;
+    this.y = w.y;
+    this.z = w.z;    
+};
+
+/**
  * Dot product
  * @param  {Object} w
  * @return {number}

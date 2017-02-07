@@ -165,6 +165,7 @@ function RayTracer(cols, rows) {
     var dnx = new Vector(this.scene.eye.w / (this.cols - 1.0), 0, 0);
     var dny = new Vector(0, this.scene.eye.h / (this.rows - 1.0), 0);
 
+    // Prepare the strips
     this.strips = [];
     var strip;
     var pnt = 0;
@@ -192,6 +193,15 @@ function RayTracer(cols, rows) {
             this.strips.push(strip);
         }
     }
+
+    // Prepare the result strip, this will be copied, it means we don't have
+    // do the 255 copy.
+    var len = (this.rows / constants.SQUARE_SIZE) * 4;
+    var a = new Uint8ClampedArray(len);
+    for (let i = 3; i < len; i += 4) {
+        a[i] = 255;
+    }
+
 }
 
 RayTracer.prototype.getNumStrips = function() {
@@ -209,7 +219,7 @@ RayTracer.prototype.render = function(stripID) {
 
     var self = this;
     var objs = self.scene.objs;
-    var resultGrid = new Uint8ClampedArray(self.strips[stripID].length * 4);
+    var resultGrid = new Uint8ClampedArray(this.preparedArray);
 
     // The "main loop"
     raytraceStrip(self.strips[stripID]);
@@ -218,19 +228,11 @@ RayTracer.prototype.render = function(stripID) {
 
     function raytraceStrip(strip) {
 
-        function setRaytrace(s) {
+        var static_colour = COL_BACKGROUND.copy();
 
-            // Don't need to calculate those that have already be calculated
-            if (s === sPntTL) return pixel_colTL;
-            if (s === sPntTR) return pixel_colTR;
-            if (s === sPntBL) return pixel_colBL;
-            if (s === sPntBR) return pixel_colBR;
-            return raytrace(self.depth, strip[s].firstRay, -1, 1);
-        }
-
-        function setBlack() {
-            return constants.COL_BLACK;
-        }
+        const static_background = COL_BACKGROUND.copy();
+        static_background.scaleInplace(255);
+        static_background.maxValInplace(255);
 
         // TopLeft (TL), TopRight (TR), ...
         var sPntTL = 0;
@@ -241,33 +243,43 @@ RayTracer.prototype.render = function(stripID) {
         // For Each Square
         for (; sPntTL < self.cols;) {
 
-            var pixel_colTL = raytrace(self.depth, strip[sPntTL].firstRay, -1, 1);
-            var pixel_colTR = raytrace(self.depth, strip[sPntTR].firstRay, -1, 1);
-            var pixel_colBL = raytrace(self.depth, strip[sPntBL].firstRay, -1, 1);
-            var pixel_colBR = raytrace(self.depth, strip[sPntBR].firstRay, -1, 1);
+            var pixel_colTL = COL_BACKGROUND.copy(); raytrace(pixel_colTL, self.depth, strip[sPntTL].firstRay, -1, 1);
+            var pixel_colTR = COL_BACKGROUND.copy(); raytrace(pixel_colTR, self.depth, strip[sPntTR].firstRay, -1, 1);
+            var pixel_colBL = COL_BACKGROUND.copy(); raytrace(pixel_colBL, self.depth, strip[sPntBL].firstRay, -1, 1);
+            var pixel_colBR = COL_BACKGROUND.copy(); raytrace(pixel_colBR, self.depth, strip[sPntBR].firstRay, -1, 1);
 
             var sPnt = sPntTL;
 
             // Check to see if we can fill the square with black
             var pixSum = pixel_colTL.add(pixel_colTR).add(pixel_colBL).add(pixel_colBR);
-            var fn;
-            if (pixSum.sumElements() === 0) {
-                fn = setBlack;
-            } else {
-                fn = setRaytrace;
-            }
+            const allElementsAreZero = pixSum.sumElements() === 0;
 
             // Fill the square with colour (or black)
             for (let r = 0; r < constants.SQUARE_SIZE; r++) {
                 for (let c = 0; c < constants.SQUARE_SIZE; c++) {
-                    var col = fn(sPnt);
-                    col.scaleInplace(255);
-                    col.maxValInplace(255);
+                    if (allElementsAreZero) {
+                        static_colour = static_background;
+                    } else {
+                        // Don't need to calculate those that have already be calculated
+                        if (sPnt === sPntTL) {
+                            static_colour = pixel_colTL;
+                        } else  if (sPnt === sPntTR) {
+                            static_colour = pixel_colTR;
+                        } else if (sPnt === sPntBL) {
+                            static_colour = pixel_colBL;
+                        } else if (sPnt === sPntBR) {
+                            static_colour = pixel_colBR;
+                        } else {
+                            raytrace(static_colour, self.depth, strip[sPnt].firstRay, -1, 1);
+                        }
+                        static_colour.scaleInplace(255);
+                        static_colour.maxValInplace(255);
+                    }
 
-                    resultGrid[sPnt * 4] = col.x;
-                    resultGrid[sPnt * 4 + 1] = col.y;
-                    resultGrid[sPnt * 4 + 2] = col.z;
-                    resultGrid[sPnt * 4 + 3] = 255;
+                    resultGrid[sPnt * 4] = static_colour.x;
+                    resultGrid[sPnt * 4 + 1] = static_colour.y;
+                    resultGrid[sPnt * 4 + 2] = static_colour.z;
+                    // resultGrid[sPnt * 4 + 3] = 255;
                     sPnt++;
                 }
                 sPnt += self.cols - constants.SQUARE_SIZE;
@@ -284,16 +296,17 @@ RayTracer.prototype.render = function(stripID) {
 
     /**
      * Recursive function that returns the shade of a pixel.
+     * @param {Object} colour    The colour - this value gets changed in place
      * @param {number} depth     How many iterations left
      * @param {Ray} ray          The ray
      * @param {number} objID  The ID of the object the ray comes from
      * @param {number} rindex    Refractivity
-     * @returns {Object}         An RGB colour
      */
-    function raytrace(depth, ray, objID, rindex) {
+    function raytrace(colour, depth, ray, objID, rindex) {
 
         if (depth === 0) {
-            return COL_BACKGROUND.copy();
+            colour.set(COL_BACKGROUND);
+            return;
         }
 
         var closestObjId = -1;
@@ -316,26 +329,27 @@ RayTracer.prototype.render = function(stripID) {
         }
 
         if (closestObjId === -1) {
-            return COL_BACKGROUND.copy();
+            colour.set(COL_BACKGROUND);
         } else {
+            colour.set(closestInt.col);
             // If we found an object, get the shade for the object.  Otherwise return the background
-            return getShadeAtPoint(depth, ray, closestObjId,  closestInt.col, closestInt.pi, rindex);
+            getShadeAtPoint(colour, depth, ray, closestObjId, closestInt.pi, rindex);
         }
     }
 
     /**
      * Get the shade of the pixel - where the work is done
+     * @param {Object} colour    The colour - this value gets changed in place
      * @param {number} depth     How many iterations left
      * @param {Ray} ray          The ray
      * @param {number} objID     The ID of the object the ray just hit
      * @param {Object} pi        The intersection point
      * @param {number} rindex    Refractivity
-     * @returns {Object}         An RGB colour
      */
-    function getShadeAtPoint(depth, ray, objID, objCol, pi, rindex) {
+    function getShadeAtPoint(colour, depth, ray, objID, pi, rindex) {
 
         var obj = objs[objID];
-        var colour = objCol.scale(obj.ambient_light);
+        colour.scaleInplace(obj.ambient_light);
 
         var light = self.scene.lights[0];
 
@@ -376,7 +390,9 @@ RayTracer.prototype.render = function(stripID) {
             R = ray.direction.sub(N.scale(2 * dotVN));
             if (depth > 0) {
                 var newRay = new Ray(pi.add(R.scale(EPSILON)), R);
-                var rcol = raytrace(depth - 1, newRay, objID, 1);
+
+                var rcol = COL_BACKGROUND.copy();
+                raytrace(rcol, depth - 1, newRay, objID, 1);
                 rcol.productInplace(obj.col);
                 rcol.scaleInplace(obj.rfl);
                 colour.addInplace(rcol);
@@ -397,12 +413,11 @@ RayTracer.prototype.render = function(stripID) {
                 T = T.scale(n);
                 T.addInplace(rN);
                 var refrRay = new Ray(pi.add(T.scale(EPSILON)), T);
-                var rfrCol = raytrace(depth - 1, refrRay, objID, obj.rfr);
+                var rfrCol = COL_BACKGROUND.copy();
+                raytrace(rfrCol, depth - 1, refrRay, objID, obj.rfr);
                 colour.addInplace(rfrCol);
             }
         }
-
-        return colour;
 
     }
 
