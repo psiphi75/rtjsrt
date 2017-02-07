@@ -8,3 +8,4 @@ hydrogen*.cfg
 profile.json
 *.cpuprofile
 benchmarks
+build
