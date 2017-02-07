@@ -196,12 +196,25 @@ function RayTracer(cols, rows) {
 
     // Prepare the result strip, this will be copied, it means we don't have
     // do the 255 copy.
-    var len = (this.rows / constants.SQUARE_SIZE) * 4;
+    var len = this.strips[0].length * 4;
     var a = new Uint8ClampedArray(len);
     for (let i = 3; i < len; i += 4) {
         a[i] = 255;
     }
+    this.preparedStripBuf = a.buffer;
 
+    // We create this line so we don't have to copy too many items too many times
+    let staticBackgroundLine = new Uint8ClampedArray(constants.SQUARE_SIZE * 4);
+    const background = COL_BACKGROUND.copy();
+    background.scaleInplace(255);
+    background.maxValInplace(255);
+    for (let i = 0; i < staticBackgroundLine.length * 4; i += 4) {
+        staticBackgroundLine[i] = background.x;
+        staticBackgroundLine[i + 1] = background.y;
+        staticBackgroundLine[i + 2] = background.z;
+        staticBackgroundLine[i + 3] = 255;
+    }
+    this.staticBackgroundLine = new Uint8ClampedArray(staticBackgroundLine);
 }
 
 RayTracer.prototype.getNumStrips = function() {
@@ -219,7 +232,8 @@ RayTracer.prototype.render = function(stripID) {
 
     var self = this;
     var objs = self.scene.objs;
-    var resultGrid = new Uint8ClampedArray(this.preparedArray);
+    var resultGrid = new Uint8ClampedArray(this.preparedStripBuf);
+    var static_colour = COL_BACKGROUND.copy();
 
     // The "main loop"
     raytraceStrip(self.strips[stripID]);
@@ -227,12 +241,6 @@ RayTracer.prototype.render = function(stripID) {
 
 
     function raytraceStrip(strip) {
-
-        var static_colour = COL_BACKGROUND.copy();
-
-        const static_background = COL_BACKGROUND.copy();
-        static_background.scaleInplace(255);
-        static_background.maxValInplace(255);
 
         // TopLeft (TL), TopRight (TR), ...
         var sPntTL = 0;
@@ -255,11 +263,15 @@ RayTracer.prototype.render = function(stripID) {
             const allElementsAreZero = pixSum.sumElements() === 0;
 
             // Fill the square with colour (or black)
-            for (let r = 0; r < constants.SQUARE_SIZE; r++) {
-                for (let c = 0; c < constants.SQUARE_SIZE; c++) {
-                    if (allElementsAreZero) {
-                        static_colour = static_background;
-                    } else {
+            if (allElementsAreZero) {
+                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
+                    resultGrid.set(self.staticBackgroundLine, sPnt * 4);
+                    sPnt += self.cols;
+                }
+            } else {
+
+                for (let r = 0; r < constants.SQUARE_SIZE; r++) {
+                    for (let c = 0; c < constants.SQUARE_SIZE; c++) {
                         // Don't need to calculate those that have already be calculated
                         if (sPnt === sPntTL) {
                             static_colour = pixel_colTL;
@@ -274,15 +286,15 @@ RayTracer.prototype.render = function(stripID) {
                         }
                         static_colour.scaleInplace(255);
                         static_colour.maxValInplace(255);
-                    }
 
-                    resultGrid[sPnt * 4] = static_colour.x;
-                    resultGrid[sPnt * 4 + 1] = static_colour.y;
-                    resultGrid[sPnt * 4 + 2] = static_colour.z;
-                    // resultGrid[sPnt * 4 + 3] = 255;
-                    sPnt++;
+                        resultGrid[sPnt * 4] = static_colour.x;
+                        resultGrid[sPnt * 4 + 1] = static_colour.y;
+                        resultGrid[sPnt * 4 + 2] = static_colour.z;
+                        // resultGrid[sPnt * 4 + 3] = 255;
+                        sPnt++;
+                    }
+                    sPnt += self.cols - constants.SQUARE_SIZE;
                 }
-                sPnt += self.cols - constants.SQUARE_SIZE;
             }
 
             sPntTL += constants.SQUARE_SIZE;
