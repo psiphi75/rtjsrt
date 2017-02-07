@@ -133,3 +133,14 @@ Bad performance due to array copying
 # 26 - Refactor getShadeAtPoint
 
 8 threads => 1014/min
+
+# 27 - Use node-gyp with C++
+
+8 thread => 53/min
+
+Went very slow, even with gcc opitimisations in place.  I presume for a small
+peice of code C++ is not worth it.
+
+# 28 - Start reducing the number of new Colour objects
+
+8 threads => 1032/min

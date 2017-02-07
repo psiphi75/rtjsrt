@@ -53,48 +53,48 @@ function Sphere(center_v) {
  * @param  {Object} ray
  * @return {Object|null}
  */
-
-const cpp = require('../build/Release/sphere_intersect');
-
-// console.log('C result:', cpp.intersect(x.dir, x.ori, x.c, x.radius, x.col));
-Sphere.prototype.intersect = function(ray) {
-    // console.log(ray.direction, ray.origin, this.c, this.r, this.col)
-    var x = cpp.intersect(ray.direction, ray.origin, this.c, this.r, this.col);
-    if (x !== null) {
-        return {
-            pi: new Vector(x.pi.x, x.pi.y, x.pi.z),
-            t: x.t,
-            col: this.col
-        };
-    }
-    return null
-};
-// Sphere.prototype.intersect = function (ray) {
-//     // Intersection with a circle from a ray coming from [px, py, pz] direction [vx, vy, vz]
-//     //A=vx * vx + vy * vy + vz * vz
-//     //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
-//     //C=px*px + py*py + pz*pz - 2 * (px
+// 
+// const cpp = require('../build/Release/sphere_intersect');
 //
-//     var A = ray.direction.dot(ray.direction);
-//     var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(this.c));
-//     var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
-//     var D = B * B - 4.0 * A * C;
-//     if (D > 0.0) {
-//         var sqrtD = Math.sqrt(D);
-//         if (-B - sqrtD > 0) {
-//             var t = (-B - sqrtD) / (2.0 * A);
-//             var pi = ray.origin.add(ray.direction.scale(t));
-//             return {
-//                 col: this.col,
-//                 t: t,
-//                 pi: pi
-//             };
-//         }
+// // console.log('C result:', cpp.intersect(x.dir, x.ori, x.c, x.radius, x.col));
+// Sphere.prototype.intersect = function(ray) {
+//     // console.log(ray.direction, ray.origin, this.c, this.r, this.col)
+//     var x = cpp.intersect(ray.direction, ray.origin, this.c, this.r, this.col);
+//     if (x !== null) {
+//         return {
+//             pi: new Vector(x.pi.x, x.pi.y, x.pi.z),
+//             t: x.t,
+//             col: this.col
+//         };
 //     }
-//
-//     // No hit, or ray is in wrong direction (when t < zero)
-//     return null;
+//     return null
 // };
+Sphere.prototype.intersect = function (ray) {
+    // Intersection with a circle from a ray coming from [px, py, pz] direction [vx, vy, vz]
+    //A=vx * vx + vy * vy + vz * vz
+    //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
+    //C=px*px + py*py + pz*pz - 2 * (px
+
+    var A = ray.direction.dot(ray.direction);
+    var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(this.c));
+    var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
+    var D = B * B - 4.0 * A * C;
+    if (D > 0.0) {
+        var sqrtD = Math.sqrt(D);
+        if (-B - sqrtD > 0) {
+            var t = (-B - sqrtD) / (2.0 * A);
+            var pi = ray.origin.add(ray.direction.scale(t));
+            return {
+                col: this.col,
+                t: t,
+                pi: pi
+            };
+        }
+    }
+
+    // No hit, or ray is in wrong direction (when t < zero)
+    return null;
+};
 /**
  * Get the normal at point p.
  * @param {Object} p  The point to get the normal at.

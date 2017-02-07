@@ -215,10 +215,6 @@ RayTracer.prototype.render = function(stripID) {
     raytraceStrip(self.strips[stripID]);
     return resultGrid.buffer;
 
-    // self.timers.getShadeAtPoint.stop();
-    // console.log('raytrace', self.timers.raytrace.totalTime(), self.timers.raytrace.getCounter());
-    // console.log('getShadeAtPoint', self.timers.getShadeAtPoint.totalTime(), self.timers.getShadeAtPoint.getCounter());
-    // console.log('intersect', self.timers.intersect.totalTime(), self.timers.intersect.getCounter());
 
     function raytraceStrip(strip) {
 
@@ -229,7 +225,7 @@ RayTracer.prototype.render = function(stripID) {
             if (s === sPntTR) return pixel_colTR;
             if (s === sPntBL) return pixel_colBL;
             if (s === sPntBR) return pixel_colBR;
-            return raytrace(self.depth, strip[s].firstRay, -1, COL_BACKGROUND, 1);
+            return raytrace(self.depth, strip[s].firstRay, -1, 1);
         }
 
         function setBlack() {
@@ -245,10 +241,10 @@ RayTracer.prototype.render = function(stripID) {
         // For Each Square
         for (; sPntTL < self.cols;) {
 
-            var pixel_colTL = raytrace(self.depth, strip[sPntTL].firstRay, -1, COL_BACKGROUND, 1);
-            var pixel_colTR = raytrace(self.depth, strip[sPntTR].firstRay, -1, COL_BACKGROUND, 1);
-            var pixel_colBL = raytrace(self.depth, strip[sPntBL].firstRay, -1, COL_BACKGROUND, 1);
-            var pixel_colBR = raytrace(self.depth, strip[sPntBR].firstRay, -1, COL_BACKGROUND, 1);
+            var pixel_colTL = raytrace(self.depth, strip[sPntTL].firstRay, -1, 1);
+            var pixel_colTR = raytrace(self.depth, strip[sPntTR].firstRay, -1, 1);
+            var pixel_colBL = raytrace(self.depth, strip[sPntBL].firstRay, -1, 1);
+            var pixel_colBR = raytrace(self.depth, strip[sPntBR].firstRay, -1, 1);
 
             var sPnt = sPntTL;
 
@@ -290,14 +286,15 @@ RayTracer.prototype.render = function(stripID) {
      * Recursive function that returns the shade of a pixel.
      * @param {number} depth     How many iterations left
      * @param {Ray} ray          The ray
-     * @param {number} source_i  The ID of the object the ray comes from
-     * @param {Object} colour    An RGB colour
+     * @param {number} objID  The ID of the object the ray comes from
      * @param {number} rindex    Refractivity
      * @returns {Object}         An RGB colour
      */
-    function raytrace(depth, ray, source_i, colour, rindex) {
-        // self.timers.raytrace.start();
-        // self.timers.raytrace.count();
+    function raytrace(depth, ray, objID, rindex) {
+
+        if (depth === 0) {
+            return COL_BACKGROUND.copy();
+        }
 
         var closestObjId = -1;
         var closestInt;
@@ -305,15 +302,10 @@ RayTracer.prototype.render = function(stripID) {
 
         for (var i = 0; i < len; i++) {
             // Don't intersect object with itself
-            if (i !== source_i) {
+            if (i !== objID) {
 
                 var obj = objs[i];
-                // self.timers.raytrace.pause();
-                // self.timers.intersect.count();
-                // self.timers.intersect.start();
                 var intersection = obj.intersect(ray);
-                // self.timers.intersect.stop();
-                // self.timers.raytrace.resume();
                 if (intersection !== null) {
                     if (closestObjId === -1 || intersection.t < closestInt.t) {
                         closestInt = intersection;
@@ -323,42 +315,33 @@ RayTracer.prototype.render = function(stripID) {
             }
         }
 
-        // If we found an object, get the shade for the object.  Otherwise return the background
-        // self.timers.raytrace.stop();
-        return getShadeAtPoint(depth, ray, closestObjId, closestInt, colour, rindex);
-
+        if (closestObjId === -1) {
+            return COL_BACKGROUND.copy();
+        } else {
+            // If we found an object, get the shade for the object.  Otherwise return the background
+            return getShadeAtPoint(depth, ray, closestObjId,  closestInt.col, closestInt.pi, rindex);
+        }
     }
 
     /**
      * Get the shade of the pixel - where the work is done
      * @param {number} depth     How many iterations left
      * @param {Ray} ray          The ray
-     * @param {number} source_i  The ID of the object the ray comes from
-     * @param {Object} intersection    The intersection information
-     * @param {Object} colour    An RGB colour
+     * @param {number} objID     The ID of the object the ray just hit
+     * @param {Object} pi        The intersection point
      * @param {number} rindex    Refractivity
      * @returns {Object}         An RGB colour
      */
-    function getShadeAtPoint(depth, ray, source_i, intersection, colour, rindex) {
+    function getShadeAtPoint(depth, ray, objID, objCol, pi, rindex) {
 
-        if (depth === 0 || source_i === -1) {
-            // self.timers.getShadeAtPoint.stop();
-            return colour;
-        }
-        // object found, return the colour
-
-        // self.timers.getShadeAtPoint.resume();
-        // self.timers.getShadeAtPoint.count();
-
-        var obj = objs[source_i];
-        colour = intersection.col.scale(obj.ambient_light);
-        var pi = intersection.pi; // the position of the intersection
+        var obj = objs[objID];
+        var colour = objCol.scale(obj.ambient_light);
 
         var light = self.scene.lights[0];
 
         // handle point light source -
         var L = light.c.sub(pi);
-        var shade = getShading(L, pi, source_i);
+        var shade = getShading(L, pi, objID);
 
         // calculate diffuse shading
         L.normaliseInplace();
@@ -393,9 +376,7 @@ RayTracer.prototype.render = function(stripID) {
             R = ray.direction.sub(N.scale(2 * dotVN));
             if (depth > 0) {
                 var newRay = new Ray(pi.add(R.scale(EPSILON)), R);
-                // self.timers.getShadeAtPoint.pause();
-                var rcol = raytrace(depth - 1, newRay, source_i, COL_BACKGROUND, 1);
-                // self.timers.getShadeAtPoint.resume();
+                var rcol = raytrace(depth - 1, newRay, objID, 1);
                 rcol.productInplace(obj.col);
                 rcol.scaleInplace(obj.rfl);
                 colour.addInplace(rcol);
@@ -416,19 +397,16 @@ RayTracer.prototype.render = function(stripID) {
                 T = T.scale(n);
                 T.addInplace(rN);
                 var refrRay = new Ray(pi.add(T.scale(EPSILON)), T);
-                // self.timers.getShadeAtPoint.pause();
-                var rfrCol = raytrace(depth - 1, refrRay, source_i, COL_BACKGROUND, obj.rfr);
-                // self.timers.getShadeAtPoint.resume();
+                var rfrCol = raytrace(depth - 1, refrRay, objID, obj.rfr);
                 colour.addInplace(rfrCol);
             }
         }
 
-        // self.timers.getShadeAtPoint.pause();
         return colour;
 
     }
 
-    function getShading(L, pi, source_i) {
+    function getShading(L, pi, objID) {
         var tdist = L.length();
         var Lt = L.scale(1 / tdist);
         var r = new Ray(pi.add(Lt.scale(EPSILON)), Lt);
@@ -437,19 +415,12 @@ RayTracer.prototype.render = function(stripID) {
             // Don't intersect with self...
             // ... and check if an object is in the way of the light source
 
-            // self.timers.getShadeAtPoint.pause();
-            // self.timers.intersect.start();
-            // self.timers.intersect.count();
-            if (source_i !== i
-                && objs[source_i].canReceiveShadow
+            if (objID !== i
+                && objs[objID].canReceiveShadow
                 && objs[i].canCreateShadow
                 && objs[i].intersect(r) !== null) {
-                // self.timers.intersect.stop();
-                // self.timers.getShadeAtPoint.resume();
                 return 0;
             }
-            // self.timers.intersect.stop();
-            // self.timers.getShadeAtPoint.resume();
         }
         return 1;
     }
