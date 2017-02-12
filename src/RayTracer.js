@@ -239,6 +239,7 @@ RayTracer.prototype.render = function(stripID) {
         var sPntTR = constants.SQUARE_SIZE - 1;
         var sPntBL = (constants.SQUARE_SIZE - 1) * self.cols;
         var sPntBR = sPntBL + constants.SQUARE_SIZE - 1;
+        var sPntMid = (sPntBR / 2) | 0;
 
         // For Each Square
         for (; sPntTL < self.cols;) {
@@ -247,11 +248,12 @@ RayTracer.prototype.render = function(stripID) {
             var pixel_colTR = COL_BACKGROUND.copy(); raytrace(pixel_colTR, self.depth, strip[sPntTR].firstRay, -1, 1);
             var pixel_colBL = COL_BACKGROUND.copy(); raytrace(pixel_colBL, self.depth, strip[sPntBL].firstRay, -1, 1);
             var pixel_colBR = COL_BACKGROUND.copy(); raytrace(pixel_colBR, self.depth, strip[sPntBR].firstRay, -1, 1);
+            var pixel_colMid = COL_BACKGROUND.copy(); raytrace(pixel_colMid, self.depth, strip[sPntMid].firstRay, -1, 1);
 
             var sPnt = sPntTL;
 
             // Check to see if we can fill the square with black
-            var pixSum = pixel_colTL.add(pixel_colTR).add(pixel_colBL).add(pixel_colBR);
+            var pixSum = pixel_colTL.add(pixel_colTR).add(pixel_colBL).add(pixel_colBR).add(pixel_colMid);
             const allElementsAreZero = pixSum.sumElements() === 0;
 
             // Fill the square with colour (or black)
@@ -289,6 +291,7 @@ RayTracer.prototype.render = function(stripID) {
             sPntTR += constants.SQUARE_SIZE;
             sPntBL += constants.SQUARE_SIZE;
             sPntBR += constants.SQUARE_SIZE;
+            sPntMid += constants.SQUARE_SIZE;
 
         }
     }

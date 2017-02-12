@@ -53,7 +53,7 @@ function Sphere(center_v) {
  * @param  {Object} ray
  * @return {Object|null}
  */
-// 
+//
 // const cpp = require('../build/Release/sphere_intersect');
 //
 // // console.log('C result:', cpp.intersect(x.dir, x.ori, x.c, x.radius, x.col));
@@ -71,15 +71,23 @@ function Sphere(center_v) {
 // };
 Sphere.prototype.intersect = function (ray) {
     // Intersection with a circle from a ray coming from [px, py, pz] direction [vx, vy, vz]
-    //A=vx * vx + vy * vy + vz * vz
-    //B=2*(vx*px + vy*py + vz*pz - vx*cx - vy*cy - vz*cz)
-    //C=px*px + py*py + pz*pz - 2 * (px
 
-    var A = ray.direction.dot(ray.direction);
-    var B = 2.0 * (ray.direction.dot(ray.origin) - ray.direction.dot(this.c));
-    var C = ray.origin.dot(ray.origin) - 2.0 * ray.origin.dot(this.c) + this.c.dot(this.c) - this.r * this.r;
-    var D = B * B - 4.0 * A * C;
-    if (D > 0.0) {
+    // Transform to local coordinates
+	var LocalP1 = ray.origin.sub(this.c);
+
+	// var A = ray.direction.dot(ray.direction);
+	var A = ray.dotDD;
+	var B = 2 * ray.direction.dot(LocalP1);
+	var C = LocalP1.dot(LocalP1) - (this.r * this.r);
+
+    // , or ray is in wrong direction (when t < zero)
+    if (B > 0 && C > 0) return null;
+	var D = B * B - (4 * A * C);
+
+    if (D < 0.0) {
+        // No hit
+        return null;
+    } else {
         var sqrtD = Math.sqrt(D);
         if (-B - sqrtD > 0) {
             var t = (-B - sqrtD) / (2.0 * A);
@@ -91,9 +99,9 @@ Sphere.prototype.intersect = function (ray) {
             };
         }
     }
-
-    // No hit, or ray is in wrong direction (when t < zero)
+    
     return null;
+
 };
 /**
  * Get the normal at point p.
@@ -231,6 +239,7 @@ Scene.prototype.add_object = function (obj) {
 function Ray(origin, direction) {
     this.origin = origin;
     this.direction = direction;
+    this.dotDD = direction.dot(direction);
 }
 
 module.exports = {

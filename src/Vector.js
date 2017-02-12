@@ -43,7 +43,7 @@ function Vector(x, y, z) {
 Vector.prototype.set = function(w) {
     this.x = w.x;
     this.y = w.y;
-    this.z = w.z;    
+    this.z = w.z;
 };
 
 /**

@@ -1,4 +1,11 @@
 
+# Optimising JavaScript for performance
+
+1. Introduction (Ray tracing, Node), disclaimer, other language shootout.  Devs with powerful PCs
+2. Process (dev, test, analyse), Tools (tools I used, howtos), Techniques (benchmarking, code gists).
+3. Memory -  memory allocated was not looked at.  But talk about GC.
+4. Gyp + Multitasking
+
 # 01
 Changed vector from [] to new Float32Array (x10 slower!!!)
 
@@ -174,3 +181,10 @@ Let JS do the memory copy, instead of for loop.
 Had to re-baseline the tests.  Since some at #30 seemed a bit off
 8 threads => 1054/min (SQUARE_SIZE = 8)
 8 threads => 1054/min (SQUARE_SIZE = 12)
+
+# 34 - Faster (in theory) Sphere Intersection
+
+8 threads => 1026/min (SQUARE_SIZE = 6)
+8 threads => 1026/min (SQUARE_SIZE = 8)
+8 threads => 1056/min (SQUARE_SIZE = 12)
+8 threads => 978/min (SQUARE_SIZE = 24)
