@@ -1,31 +1,101 @@
+3rd party applications
+More on IRHydra in a later post
+
 
 # Optimising JavaScript for performance
 
 1. Introduction (Ray tracing, Node), disclaimer, other language shootout.  Devs with powerful PCs
 2. Process (dev, test, analyse), Tools (tools I used, howtos), Techniques (benchmarking, code gists).
+   ES5: V8 optmises for real world JS, http://v8project.blogspot.co.nz/2016/12/how-v8-measures-real-world-performance.html
 3. Memory -  memory allocated was not looked at.  But talk about GC.
 4. Gyp + Multitasking
 
+
+
+# Features
+
+ - Runs in Node.js runable.
+ - Reduce object creation to reduce GC.
+ - use [ImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) for the browser.  This will enable direct copying between
+   workers and direct drawing to the canvas.
+ - For node try GYP (say "jip")
+ - Make sure the Objects are initailised in the same order.  Extend these objects.
+
+
+Greate Video: https://www.youtube.com/watch?v=UJPdhx5zTaw&feature=youtu.be&t=31m30s
+V8 has two compilers
+ - Full compiler - compiler to create code quickly
+ - Optimising compiler - compiler that produces optimised code - re-compiles hot functions
+
+# Performance
+
+0. Begin with idiomatic code that works
+1. Identify issue
+2. Measure
+3. Dev
+4. Test
+5. Commit or revert
+
+# Tips:
+## Prefer monomorphic code to polymorphic
+
+```JavaScript
+function add(a, b) {
+    return a + b;
+}
+add(1, 2);          // Starts as monomorphic
+add(2, 3);          // Still monomorphic
+add('x', 'y');      // Now becomes polymorphic
+```
+
+## Avoid try - catch in performace sensitive block of code
+
+## Once an object is initialised with contrustor don't change it's "shape"
+
+- Hidden class will change
+
+```JavaScript
+fuction vector(x, y) {
+    this.x = x;
+    this.y = y;
+}
+
+vector a = new vector(1, 2);
+vector b = new vector(3, 4);
+b.z = 5;                        // Don't do this
+```
+
+
+# 00 - Baseline
+=> 101/min (1.6833)
+
 # 01
-Changed vector from [] to new Float32Array (x10 slower!!!)
+Changed vector from [] to new Float32Array
+=> 8/min (0.133)
 
 # 02
-Changed vector from [] to new Array (x4 slower!!!)
+Changed vector from [] to new Array
+=> 4/min (0.06667)
 
 # 03 - Optimising vector.dot()
 14 occurences reduced to 12
+=> 112/min (1.867)
 
 # 04 - Upgrade from Node 4.2 to 6.9
+=> 113/min (1.883)
 
 # 05 - Use SIMD instructions
-
 It's going be slow for some time, read: https://groups.google.com/a/chromium.org/forum/#!topic/chromium-discuss/VEbF2KEmV-I
+=> 35/min (0.583)
 
 # 06 - Enhanced vector math to re-use objects
+=> 107/min (1.783)
 
 # 07 - Use const and let
+=> 86/min (1.43)
 
 # 08 - Do some pre-calculations
+=> 110/min (1.833)
 
 # 09 - Render Squares
 
@@ -33,10 +103,11 @@ I was expecting a 20 to 30% boost here.  Not a slow down.
 
 If the corners of the square are black, then we just fill in the square.  The funny
 this is that this actually went slower.  Need to look at the profiler.
+=> 106/min (1.766)
 
 # 11 - Changed vector object pattern
-
 Significant performance improvement.  The Vetor.dot function has gone from around 19% to 1.6%.
+=> 212/min (3.533)
 
 # 12 - Cache some the rays that have already been rendered
 
