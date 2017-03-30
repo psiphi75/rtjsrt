@@ -259,3 +259,7 @@ Had to re-baseline the tests.  Since some at #30 seemed a bit off
 8 threads => 1026/min (SQUARE_SIZE = 8)
 8 threads => 1056/min (SQUARE_SIZE = 12)
 8 threads => 978/min (SQUARE_SIZE = 24)
+
+# 35 - Render from bottom up
+
++4.5%

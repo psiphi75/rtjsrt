@@ -23,7 +23,7 @@
 
 'use strict';
 
-const isNodeJS = new Function('try {return this===global;}catch(e){return false;}')();
+const isNodeJS = new Function('try {return this===global;}catch(e){return false;}')();      // eslint-disable-line no-new-func
 
 var path = isNodeJS ?  __dirname + '/../../src/' : '';
 var RayTracer;

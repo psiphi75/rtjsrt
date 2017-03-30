@@ -30,7 +30,7 @@ const constants = {
     NUM_WORKERS: 8,
 
     // Raytracing Depth
-    DEPTH: 9,
+    DEPTH: 12,
 
     // Used to make sure we are on the near side of point of intersection
     EPSILON: 0.00001,

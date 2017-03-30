@@ -34,7 +34,9 @@ function ManageRayTracing(numWorkers, width, height, grid) {
 
     if (this.numWorkers > 1) {
         // Create an array ['0', '1', '2', ...]
-        this.stripIDs = [...Array(this.numStrips).keys()].map((i) => i.toFixed(0));
+        this.stripIDs = [...Array(this.numStrips).keys()]
+                            .reverse()
+                            .map((i) => i.toFixed(0));
         this.workerManager = new WorkerManager(numWorkers);
     }
 
@@ -44,11 +46,11 @@ ManageRayTracing.prototype.renderFrame = function(callback) {
 
     var self = this;
     if (this.numWorkers > 1) {
-        this.workerManager.addWorkToQueue(this.stripIDs, function(err, rtData, stripID) {
+        this.workerManager.addWorkToQueue(this.stripIDs, function handleRenderedStripResult(err, rtData, stripID) {
             applyData(rtData.data, stripID);
         }, callback);
     } else {
-        for (let stripID = 0; stripID < this.numStrips; stripID++) {
+        for (let stripID = this.numStrips - 1; stripID >= 0; stripID--) {
             applyData(this.rt.render(stripID), stripID);
         }
         this.rt.increment();
